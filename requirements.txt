@@ -1,0 +1,11 @@
+# Python 3.10. BLE 1.0.1 (2022) breaks on newer SciPy / scikit-learn / Python 3.11.
+balloon-learning-environment==1.0.1
+scipy<1.14
+numpy<2
+scikit-learn==1.0.2
+tensorboard
+xarray
+netCDF4
+matplotlib
+pandas
+global-land-mask
