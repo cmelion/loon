@@ -116,10 +116,34 @@ class Tracks:
       return int(str(first.start.iloc[0])[:4])
     return 2025
 
-  def mean_dwell_h(self, month=None, service=True):
+  def mean_dwell_h(self, month=None, service=True, sites=None):
+    """Mean service (or full) hours of the tracks launched in `month`, from `sites` (default all).
+
+    A month with no track from the chosen sites falls back to those sites' all-year mean.
+    (Before 2026-10-17 the sites were ignored, so a subset study held N aloft at the
+    whole library's dwell: 123 aloft for a nominal 100 on the real 2025 files.)
+    """
     h = self.end_h if service else self.dwell_h
-    m = np.ones(len(h), bool) if month is None else (self.launch_month == month)
-    return float(h[m].mean()) if m.any() else float(h.mean())
+    s = np.ones(len(h), bool) if sites is None else np.isin(self.site, list(sites))
+    if not s.any():
+      raise ValueError(f'no tracks from sites {sites}')
+    m = s if month is None else (s & (self.launch_month == month))
+    return float(h[m].mean()) if m.any() else float(h[s].mean())
+
+  def window_mean_dwell_h(self, t, sites=None, window_h=21 * 24, service=True):
+    """Mean service hours of the tracks pick() can choose at hour t: from `sites`, launched within
+    +-window_h of t (circular in the year); the nearest track if none is in the window."""
+    h = self.end_h if service else self.dwell_h
+    sites = list(sites or self.sites)
+    vals = []
+    for s in sites:
+      cand = self._by_site[s]
+      d = np.abs((self.launch_hours[cand] - t + self.period_h / 2) % self.period_h - self.period_h / 2)
+      near = cand[d <= window_h]
+      if len(near) == 0:
+        near = cand[[int(np.argmin(d))]]
+      vals.append(h[near].mean())
+    return float(np.mean(vals))   # equal launches per site: the sites' means weigh equally
 
   def pick(self, site, t_launch, rng, window_h=21 * 24):
     """A stored flight from `site` launched within +-window_h of t_launch (circular in the year)."""
@@ -159,15 +183,19 @@ class Launches:
     return len(self.t)
 
 
-def make_launches(tracks, rate_per_day, t0, t1, rng, sites=None, window_h=21 * 24):
-  """Launches at `rate_per_day` (a number, or a function of month) from t0 to t1, round-robin over sites."""
+def make_launches(tracks, rate_per_day, t0, t1, rng, sites=None, window_h=21 * 24, by_hour=False):
+  """Launches at `rate_per_day` (a number, a function of month, or with by_hour a function of the
+  launch day's hour) from t0 to t1, round-robin over sites."""
   sites = list(sites or tracks.sites)
   ts, fs = [], []
   k = 0
   day = math.floor(t0 / 24.0)
   while day * 24 < t1:
     month = int(hours_to_month(day * 24, tracks.year)[0])
-    r = rate_per_day(month) if callable(rate_per_day) else rate_per_day
+    if by_hour:
+      r = rate_per_day(day * 24.0)
+    else:
+      r = rate_per_day(month) if callable(rate_per_day) else rate_per_day
     n = int(math.floor(r + rng.random()))  # fractional rates: Bernoulli on the remainder
     for j in range(n):
       t = day * 24 + (j + 0.5) * 24.0 / n
@@ -182,10 +210,21 @@ def make_launches(tracks, rate_per_day, t0, t1, rng, sites=None, window_h=21 * 2
   return Launches(t, f, t + tracks.end_h[f] if len(f) else t)
 
 
-def standing_launches(tracks, n_aloft, t0, t1, rng, sites=None, window_h=21 * 24, service=True):
-  """Little's law: launches/day in each month = N * 24 / mean service hours of that month's tracks."""
-  rate = lambda m: n_aloft * 24.0 / tracks.mean_dwell_h(m, service)
-  return make_launches(tracks, rate, t0, t1, rng, sites, window_h)
+def standing_launches(tracks, n_aloft, t0, t1, rng, sites=None, window_h=21 * 24, service=True, by='window'):
+  """Little's law: launches/day = N * 24 / mean service hours of the tracks the launches will fly,
+  from the chosen sites (equal launches per site, round-robin).
+
+  by='window' (default): the mean over the tracks pick() can choose on that day, i.e. the same
+  +-window_h of launch date, so the layer holds N in expectation. by='month': the launch month's
+  mean, the original form; on the real 2025 files it ran single-site layers at two to three times N
+  in months whose window reaches into a neighbouring month of much longer flights (Lisbon in
+  January: 180 aloft for a nominal 50), because the rate and the picks used different track sets.
+  """
+  if by == 'month':
+    rate = lambda m: n_aloft * 24.0 / max(tracks.mean_dwell_h(m, service, sites), 1.0)
+    return make_launches(tracks, rate, t0, t1, rng, sites, window_h)
+  rate = lambda t: n_aloft * 24.0 / max(tracks.window_mean_dwell_h(t, sites, window_h, service), 1.0)
+  return make_launches(tracks, rate, t0, t1, rng, sites, window_h, by_hour=True)
 
 
 def warm_start(tracks, n, t0, rng, window_h=21 * 24):

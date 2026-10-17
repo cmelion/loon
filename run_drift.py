@@ -38,9 +38,18 @@ LAUNCH = {'Lisbon': (38.7, -9.1), 'Brest': (48.4, -4.5), 'Dublin': (53.3, -6.3),
 # the band reverses and these become the upwind edge. LAUNCH_SET=nordic flies them
 # instead of the five above; LAUNCH_SET=all flies both sets.
 NORDIC = {'Copenhagen': (55.7, 12.6), 'Gothenburg': (57.7, 12.0), 'Riga': (56.9, 24.1), 'Tallinn': (59.4, 24.7)}
+# Candidate sites from the launch-site mix study (results/site_mix.md): each sits upwind of a part of
+# the region the nine sites above cover poorly in the replay. Not yet flown. LAUNCH_SET=candidates.
+CANDIDATES = {'Aberdeen': (57.1, -2.1),      # western feeder for the northern box in winter
+              'Santiago': (42.9, -8.5),      # north-west Iberia, where Lisbon's winter flights exit
+              'Belgrade': (44.8, 20.5),      # a day upwind of Bucharest for the Balkans and Black Sea
+              'Warsaw': (52.2, 21.0),        # central-east band between the Nordic and the Vienna tracks
+              'Ankara': (39.9, 32.9)}        # the south-east corner, poorly covered by every set
 _set = os.environ.get('LAUNCH_SET', '')
 if _set == 'nordic':
   LAUNCH = NORDIC
+elif _set == 'candidates':
+  LAUNCH = CANDIDATES
 elif _set == 'all':
   LAUNCH = {**LAUNCH, **NORDIC}
 from run_coverage import STATIONS
