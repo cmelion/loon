@@ -106,13 +106,13 @@ Appended to `results/weakness_register.md` as W34–W50. In one line each: launc
 
 ## The reruns, in the order they pay
 
-All in this repository, all cheap relative to any flight, each one changes a published number.
+All in this repository, all cheap relative to any flight, each one changes a published number. Status as of 17 October 2026, from `results/reruns_2026-10-17.md`: 1, 2, 3 and 5 have run on 2025, and the power and class M parts of 4; the held-out years, the light vehicle and 6–9 have not.
 
-1. ERA5 0.25° ingest (`fetch.py` replacement), 2010–2025, full column, no 70°N clamp. Everything below depends on it.
-2. December–February directional-shear histograms at 45–55°N, 30–150 hPa, and an upper bound on dwell with a perfect controller (W1).
-3. `jet_test.py` and `forecast_release.py` on ERA5 with archived forecasts for the decisions and recovery sites re-placed on the exit corridors (W7, W10).
-4. The light-vehicle model and re-fly of the drift set (W3), with `analyze_power.py` on 50°N January irradiance (W5).
-5. `outage_scenario.py` at 0.04, 0.2 and 0.5 Gbps per balloon, and at 6–12 launches a site a day (W11, W23).
+1. ERA5 0.25° ingest (`fetch.py` replacement), 2010–2025, full column, no 70°N clamp. Everything below depends on it. **Done for 2025** at 1° six-hourly (0.25° does not fit, see `docs/reruns_era5.md`): zero NaN, the January box-mean profile within 1–1.3 m/s of GFS at every overlapping level, the band to 90°N; files on release `data-era5`. Other years not yet fetched.
+2. December–February directional-shear histograms at 45–55°N, 30–150 hPa, and an upper bound on dwell with a perfect controller (W1). **Done on 2025**: ERA5 ceiling 2.4 days in December–February and 1.8 days in January, the same as GFS and NCEP; W1 confirmed on three datasets.
+3. `jet_test.py` and `forecast_release.py` on ERA5 with archived forecasts for the decisions and recovery sites re-placed on the exit corridors (W7, W10). **Done on ERA5 2025** with the existing release rules and sites: recovery 98.3 % (the site-network ceiling), five-day forecast-release dwell 2.03 days against 1.98 on GFS, so the €6.3 B forecast-release case stands. Archived forecasts and re-placed sites still to do.
+4. The light-vehicle model and re-fly of the drift set (W3), with `analyze_power.py` on 50°N January irradiance (W5). **Power done** (`winter_power.py`): a 300 W night on the light vehicle needs 4.5 kWh in December, a 37.5 kg battery that overruns the 40 kg payload; the class M 3 kWp array closes the January day, and a lift-gas fuel cell carries class M loads 6–11 winter nights (median 8.5) for 10–17 % of the gas; without a fuel cell class M ends 86 of 120 flights out of power. **Nordic launch set done**: winter dwell 1.91 days as expected, summer 4.26 against 9.92 for the five sites, so the set is a coverage requirement for the Baltic and Scandinavia (26 against 8.6 hours a flight over the northern box), not a dwell optimisation. **Canada on the ERA5 band to 90°N done**: useful share 46 %, every flight reaches Europe, median peak latitude 69°N (the NCEP 70°N clamp hid it). The light vehicle has not flown; the per-year re-fly has not run.
+5. `outage_scenario.py` at 0.04, 0.2 and 0.5 Gbps per balloon, and at 6–12 launches a site a day (W11, W23). **Done**: the 300 km winter voice-and-text zone at 0.2 Gbps needs 2,545 balloons and 4,429 launches a day, against 254 and 443 at 2 Gbps; 370–740 launch sites at 6–12 a site a day. Regional backfill only works with gigabit-class radios.
 6. `availability.py` on population cells (W25), and the time-to-N-balloons surge replay from cold start and from 50 or 100 aloft (W24).
 7. Mesh connectivity on the tracks at 500 and 700 km with gateway sites (W15).
 8. FIR and border tagging of every track (W20), and the envelope mass flow at three recovery rates (W21).

@@ -1,6 +1,6 @@
 # Runbook: the ERA5 reruns
 
-*2026-10-17. For whoever runs the simulations on the machine that has the engine. The nine reruns are listed in `results/mitigation_research.md` in the order they pay; this file says, for each one, what exists in the repository today, the exact command, what it writes, and what number it changes. Reruns 1, 2, 3 and 5 run now. Reruns 4 (light vehicle and winter power), 6, 7 and 9 have their scripts written and tested on synthetic inputs; none has yet run on the engine or on real tracks, and the light vehicle has not flown. Rerun 8 still needs data and code.*
+*2026-10-17. For whoever runs the simulations on the machine that has the engine. The nine reruns are listed in `results/mitigation_research.md` in the order they pay; this file says, for each one, what exists in the repository today, the exact command, what it writes, and what number it changes. Status, 17 October 2026: reruns 1, 2, 3 and 5 have run on 2025, together with the power budget, the class M runs, the Nordic launch set and Canada on the ERA5 band from rerun 4; the numbers are in `results/reruns_2026-10-17.md` and are repeated under each rerun below as "done". The held-out years, the light vehicle (which has not flown) and reruns 6, 7 and 9 have not run on the engine or on real tracks. Rerun 8 still needs data and code.*
 
 ## 0. Before anything
 
@@ -38,6 +38,8 @@ Volume: band 1° about 1.4 GB a year, europe 1° about 0.7 GB a year, both compo
 
 Writes `data/era5_band_<year>.npz`, `data/era5_europe_<year>.npz`, `data/era5_europe_upper_<year>.npz`, none committed (add `data/era5_*` to `.gitignore` if it is not there).
 
+**Done for 2025** (17 October 2026). CDS refused a year in one request, so the fetch is one request per month with `--keep-nc`. All three files have zero NaN, `t0` 2025-01-01T00 and `dt_h` 6; the band file runs to 90°N. The January box mean is within 1–1.3 m/s of GFS at all five overlapping levels (ERA5 20.1, 19.0, 18.1, 18.8, 23.6 m/s against GFS 19.1, 18.7, 18.5, 19.7, 24.9), with the tropospheric jet core at 200 hPa at the box's southern edge; gate passed. `profile_check.py` was fixed on the way (its latitude of maximum was offset by one row and its peak line picked the polar-night jet). The files are on release `data-era5`. Other years not yet fetched.
+
 ## 1b. Putting the wind data in the repository
 
 The data belong with the code, and GitHub refuses any file over 100 MB in a commit, so the ERA5 files go up as release assets rather than tracked files (`data/era5_*` stays in `.gitignore`). One release holds them all, one asset per product and year; GitHub allows 2 GB per asset. From the machine that fetched them:
@@ -55,7 +57,7 @@ gh release download data-era5 --repo cmelion/loon --dir data --pattern 'era5_*_2
 
 The `--pattern` picks the years wanted. The NCEP files (`ncep_band_2025.npz`, `ncep_europe_full_2025.npz`, `ncep_europe_upper_2025.npz`) can go up the same way under a `data-ncep` release so the 2025 comparison is reproducible without NOAA downloads. Record the release tag and the file's `t0` and shape in the rerun's paragraph when a result is reported.
 
-## 2. Winter shear and the perfect-controller ceiling (W1) — runs now
+## 2. Winter shear and the perfect-controller ceiling (W1) — done for 2025
 
 ```bash
 .venv/bin/python shear_hist.py data/gfs_europe_2025.npz --tag gfs_2025_djf          # baseline, already run
@@ -66,9 +68,9 @@ for y in 2010 2012 2015 2018 2019 2021 2024; do
 done
 ```
 
-What it gives: for every grid point at 45–55°N and every six hours of the season, the largest angle between wind directions across 150–30 hPa (if small, there is no level to choose), the speed at the slowest level, and the crossing time of a 3,000 km region for a controller that always sits at that level. On the 2025 GFS file, already in `results/shear_gfs_2025_*.csv`: in December–February the median spread is 31° and the slowest level still runs 13 m/s eastward 93 % of the time, so the ceiling is 2.4 days; in June–August the spread is 152° and the slowest level is 2.7 m/s, ceiling 12 days. The question the ERA5 years answer is whether 2025 was a typical winter. Paste the printed summaries into a table in `results/shear_summary.md`; if several winters give a ceiling above four days, W1's "nothing to steer with" is too strong and the winter product changes.
+What it gives: for every grid point at 45–55°N and every six hours of the season, the largest angle between wind directions across 150–30 hPa (if small, there is no level to choose), the speed at the slowest level, and the crossing time of a 3,000 km region for a controller that always sits at that level. On the 2025 GFS file, already in `results/shear_gfs_2025_*.csv`: in December–February the median spread is 31° and the slowest level still runs 13 m/s eastward 93 % of the time, so the ceiling is 2.4 days; in June–August the spread is 152° and the slowest level is 2.7 m/s, ceiling 12 days. **Done for 2025:** ERA5 December–February gives a 30° median spread, 13.5 m/s at the slowest level, eastward 93 % of the time and a 2.4-day ceiling; June–August 150°, 2.7 m/s, 12.0 days; January alone 1.8 days on ERA5 and NCEP, 1.9 on GFS. Three datasets agree to within rounding, so "nothing to steer with in winter" holds for 2025. The question the remaining ERA5 years answer is whether 2025 was a typical winter. Paste the printed summaries into a table in `results/shear_summary.md`; if several winters give a ceiling above four days, W1's "nothing to steer with" is too strong and the winter product changes.
 
-## 3. Descent winds and release rules on ERA5 (W7, W10) — runs now for 2025
+## 3. Descent winds and release rules on ERA5 (W7, W10) — done for 2025
 
 `jet_test.py` names its grids in a dict at the top. Add ERA5 rows and run:
 
@@ -85,9 +87,9 @@ PYTHONWARNINGS=ignore .venv/bin/python -I jet_test.py          # results/jet_tes
 PYTHONWARNINGS=ignore .venv/bin/python -I forecast_release.py  # results/forecast_release.csv, .md
 ```
 
-Both scripts replay the 120 stored slow-controller tracks from 2025 (`results/slow_tracks.csv`), so they are valid for 2025 only; other years need rerun 4 first. The number that changes: the 98.3 % recovery ceiling and the 1.98-day forecast-release dwell. Expect the headline near the site-network ceiling; expect the terminal phase (last 3 km) to be where ERA5's finer winds bite. The W10 0.25° file is for a separate descent-only study: no script exists for it yet; the specification is one Monte Carlo of parachute and parafoil descents from 150 hPa over the W10 box with the full column, reporting landing-ellipse radius against release altitude, and it belongs with the recovery decision in `results/mitigation_research.md`.
+Both scripts replay the 120 stored slow-controller tracks from 2025 (`results/slow_tracks.csv`), so they are valid for 2025 only; other years need rerun 4 first. The number that changes: the 98.3 % recovery ceiling and the 1.98-day forecast-release dwell. **Done for 2025:** recovery 98.3 % on ERA5's full column for both designs and both release rules (97.7–98.1 % with the old taper); forecast-only release 2.55 / 2.34 / 2.03 / 1.72 / 0.90 days for hindsight, 7-, 5-, 3- and 1-day lookahead against 2.48 / 2.27 / 1.98 / 1.73 / 0.91 on GFS, written to `results/forecast_release_era5.*`. The €6.3 B forecast-release cost case stands. Archived forecasts and re-placed recovery sites are still to do. Expect the headline near the site-network ceiling; expect the terminal phase (last 3 km) to be where ERA5's finer winds bite. The W10 0.25° file is for a separate descent-only study: no script exists for it yet; the specification is one Monte Carlo of parachute and parafoil descents from 150 hPa over the W10 box with the full column, reporting landing-ellipse radius against release altitude, and it belongs with the recovery decision in `results/mitigation_research.md`.
 
-## 4. Re-fly the drift set per year, and winter power (W3, W5) — drift runs now; light vehicle and power written, untested on the engine
+## 4. Re-fly the drift set per year, and winter power (W3, W5) — power, class M, Nordic and Canada done for 2025; per-year re-fly and light vehicle not run
 
 ```bash
 for y in 2019 2021 2024 2025; do
@@ -97,7 +99,7 @@ done
 .venv/bin/python analyze_drift.py   # reads results/drift_2025.csv; point it at each year's file or loop by hand
 ```
 
-`WIND_GRID` moves the whole run to that year: the grid, the epoch and the launch dates. `LAUNCH_SET=nordic` flies Copenhagen, Gothenburg, Riga and Tallinn instead of the five western and central sites (`LAUNCH_SET=all` flies both sets), writing `results/drift_<year>_nordic.csv`; these were never run, winter should carry them out of the region within a day and summer should make them the best sites, and the per-month dwell by site is the number to report. The number that changes: mean dwell 5.4 days (and the winter 1.3–1.9 days) becomes a distribution across years, which is what the cost model should use instead of one year.
+`WIND_GRID` moves the whole run to that year: the grid, the epoch and the launch dates. `LAUNCH_SET=nordic` flies Copenhagen, Gothenburg, Riga and Tallinn instead of the five western and central sites (`LAUNCH_SET=all` flies both sets), writing `results/drift_<year>_nordic.csv`; the expectation was that winter would carry them out of the region within a day and summer would make them the best sites. **Done for 2025:** winter 1.91 days against 2.55 for the five sites, so the winter half holds; summer 4.26 against 9.92, so the summer half does not, and Nordic sites are less than half as good in summer (Copenhagen 4.03, Gothenburg 3.95, Riga 3.31, Tallinn 1.85 days over the year). Dwell is the wrong measure for them: over a northern box 54–59.5°N, 5–30°E the four Nordic sites give 26.2 hours a flight against 8.6 from the five sites, 33 % against 7 % of region time, and no month without coverage against four, so the set is a coverage requirement for the Baltic and Scandinavia, not a dwell optimisation (`results/drift_2025_nordic.csv`, `results/slow_tracks_nordic.csv`). The number that changes: mean dwell 5.4 days (and the winter 1.3–1.9 days) becomes a distribution across years, which is what the cost model should use instead of one year.
 
 **The heavy vehicle (class M) needs no new dwell run.** In mass it is the simulator's own balloon: `vehicle.py`'s `heavy` preset (100 kg payload, 60 kg envelope, hydrogen, Loon's 2,380 Pa film) sizes to 1,864 m³ against BLE's 1,804, so every track in `results/` already describes its drift and dwell. What it changes is power: 1,000 W by day, 300 W at night for a reduced service, a 3,000 Wp array and a fuel cell on the lift gas for the rest of the night, all labelled assumptions in the preset. Run:
 
@@ -107,7 +109,7 @@ VEHICLE=heavy WINTER=1 MAX_DAYS=60 FUEL_CELL=vent PYTHONWARNINGS=ignore .venv/bi
 .venv/bin/python winter_power.py --vehicle heavy --array tilt --area-m2 14 --lat 50 --dates 2025-01-15,2025-06-15   # the day budget by hand; 14 m² is about 3 kWp at 22 %
 ```
 
-The numbers to report: how many January nights the class M loads survive before the fuel cell has burned 7–16 % of the lift gas, and whether a 3 kWp array closes the day at 50°N in January. Those are the phase 3 gate in `results/deployable_now.md`.
+The numbers to report: how many January nights the class M loads survive before the fuel cell has burned 7–16 % of the lift gas, and whether a 3 kWp array closes the day at 50°N in January. Those are the phase 3 gate in `results/deployable_now.md`. **Done:** without a fuel cell (the drift script has none) class M loads end 86 of 120 flights out of power, mean dwell 2.35 days against 5.39 (`results/drift_2025_heavy.csv`); on the lift gas, twenty winter launches survive 6–11 nights (median 8.5), 19 ending ZEROPRESSURE after burning 10–17 % of the gas (`results/multipass_2025_nochina_fcvent_winter60d_heavy.jsonl`); the 3 kWp array harvests 31 kWh in January against a 4.4 kWh night, so the day closes. One-way winter service passes, winter loiter fails. The 100 kg hemispheric run also went to the pole on the ERA5 band: `WIND_GRID=data/era5_band_2025.npz LAUNCH_SET=canada MAX_DAYS=60 BATTERY_WH=10000 THRUST_MS=3` gives a 46 % useful share, every flight reaching Europe and a median peak latitude of 69.4°N against 64.4°N on the clamped NCEP grid (`results/multipass_2025_nochina_bat10000_thrust3_canada_era5.jsonl`).
 
 The light vehicle (W3) is in `vehicle.py` and has not flown. `vehicle.size()` derives what BLE needs from the envelope note's inputs (40 kg payload, 18 kg envelope, 60 hPa ceiling, 5 % spare lift, 1,000 Pa design superpressure, hydrogen): 2,268 mol of H₂ (4.6 kg) and a 676 m³ envelope, against the note's 678 m³; `vehicle.apply()` writes those into the BLE balloon state after the arena is built, re-runs `stable_init`, sets the lift-gas molar mass to hydrogen, scales the pump and the array, and `run_drift.py --vehicle light` (also `track_slow.py --vehicle light`) calls it and writes `results/drift_<year>_light.csv`. The sizing is tested (`tests/test_vehicle.py`); the flight is not, and the module docstring lists what the first engine run must check, in order: whether the vehicle survives its first sunset and sunrise at 1,000 Pa in BLE's thermal model (raise `dp_max_pa` if it bursts and record the rating), the launch pressure, the pump and array scaling assumptions, then the re-fly. The hydrogen correction is a monkeypatch of `constants.HE_MOLAR_MASS` in the worker process; confirm no other module caches it.
 
@@ -127,13 +129,13 @@ python -m pytest tests/test_vehicle.py tests/test_winter_power.py
 
 The runbook's track files: `track_slow.py` now follows `WIND_GRID`/`YEAR` and writes `results/slow_tracks_<year>.csv` (plus `_summary`), which reruns 6 and 7 replay; the 2025 GFS run keeps its original name `results/slow_tracks.csv`. Run it for each year after `run_drift.py`, since the per-flight drift file has no hourly positions.
 
-## 5. The outage scenario at Loon-class capacity (W11, W23) — runs now
+## 5. The outage scenario at Loon-class capacity (W11, W23) — done
 
 ```bash
 BALLOON_GBPS=0.04,0.2,0.5 .venv/bin/python -I outage_scenario.py   # results/outage_scenario_0.04_0.2_0.5.csv
 ```
 
-The number that changes: 254 balloons and 443 launches a day for the 300 km winter voice-and-text zone were computed at 2 Gbps a balloon; at 0.2 Gbps the balloon count is set by capacity rather than by cell geometry, and the launch rate scales with it. Then do the W23 arithmetic by hand from the new launches-per-day column: at 6–12 launches a site a day, sites needed = launches ÷ 6 and ÷ 12. That is the honest surge geometry until `surge_dispatch.py` exists (specification below).
+The number that changes: 254 balloons and 443 launches a day for the 300 km winter voice-and-text zone were computed at 2 Gbps a balloon; at 0.2 Gbps the balloon count is set by capacity rather than by cell geometry, and the launch rate scales with it. Then do the W23 arithmetic by hand from the new launches-per-day column: at 6–12 launches a site a day, sites needed = launches ÷ 6 and ÷ 12. That is the honest surge geometry until `surge_dispatch.py` exists (specification below). **Done:** 2,545 balloons and 4,429 launches a day at 0.2 Gbps for the 300 km winter voice-and-text zone, against 254 and 443 at 2 Gbps; 370–740 sites at 6–12 launches a site a day. The per-flight cost in that script is still the earlier €12,400 mid case.
 
 ## 6. Availability on population cells and time to N balloons (W24, W25) — written, needs the tracks and a raster
 
@@ -179,4 +181,4 @@ The number that changes: the withdrawn €0.2–0.5 B readiness figure gets an a
 
 ## Reporting back
 
-Commit the small outputs (`results/shear_*.csv`, `results/outage_scenario_*.csv`, `results/jet_test.*`, `results/forecast_release.*`, `results/drift_<year>.csv`) and not the data files. For each rerun, one paragraph in `results/mitigation_research.md` under the rerun's number: the command, the number before, the number after, and whether the architecture decision it supports still holds.
+Commit the small outputs (`results/shear_*.csv`, `results/outage_scenario_*.csv`, `results/jet_test.*`, `results/forecast_release.*`, `results/drift_<year>.csv`) and not the data files. For each rerun, one paragraph with the command, the number before, the number after, and whether the architecture decision it supports still holds; the 17 October 2026 run put these in `results/reruns_2026-10-17.md`, and the list in `results/mitigation_research.md` carries a one-line status per rerun.
