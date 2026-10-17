@@ -15,6 +15,8 @@ Black Sea.
 | Envelope landing after cut-down | `analyze_envelopes.py` | 66% land on land; median 26 km parachute drift. |
 | Burning the envelope at altitude | `burn_sim.py` | Median 90% consumed but film shreds scatter over ~200 km; ~215 kg CO₂ per balloon if fully burnt. Not safer than parachute cut-down. |
 | Cost vs satellite systems | `cost_model.py` → `results/cost_comparison.md` | ~€15.5 B/yr (€10.6–22.1 B) for ~95% year-round coverage, ~53× Starlink's attributable cost per km². Envelope and payload costs dominate; hydrogen is ~0.3%. |
+| Cost reduction levers | `cost_reduction.py` → `results/cost_reduction.md` | Engineering levers (envelope cost at volume, 94% payload recovery, 60–80 km footprint) cut the 95% year-round fleet to ~€4.2 B/yr, ~15× Starlink. Only a thinner hybrid service (50% coverage with satellite backstop, winter 50%, populated land) reaches ~4.6×. |
+| Forecast-lookahead controller | `planner.py`, `run_drift.py --controllers plan` | Paired with the slow controller: fewer very short flights but no change in mean dwell (Little's law: launches ∝ 1/mean dwell), so no cost saving; winter unchanged. |
 
 Charts and per-flight CSVs are in `results/`.
 

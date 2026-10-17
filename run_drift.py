@@ -40,6 +40,8 @@ CONTROLLERS = ('passive', 'slow', 'home')
 MAX_DAYS = 30
 STEP_MIN = 3
 DECIDE_EVERY = 5  # steps (15 min)
+PLAN_EVERY = 40  # steps (2 h) for the lookahead planner
+SEED_C = {'passive': 0, 'slow': 1, 'home': 2, 'plan': 1}  # plan pairs with slow
 
 
 def in_region(lat, lon):
@@ -115,6 +117,19 @@ def fly(job):
     s = arena.get_balloon_state()
     if kind == 'passive':
       action = control.AltitudeControlCommand.STAY
+    elif kind == 'plan':
+      if steps % PLAN_EVERY == 0:
+        import planner
+        pr = pressure_range_builder.get_pressure_range(s, arena._atmosphere)
+        target = planner.plan(grid, s.latlng.lat().degrees, s.latlng.lng().degrees,
+                              (s.date_time - eb.T0).total_seconds() / 3600,
+                              pr.min_pressure, pr.max_pressure, REGION)
+      if s.pressure > target + 300:
+        action = control.AltitudeControlCommand.UP
+      elif s.pressure < target - 300:
+        action = control.AltitudeControlCommand.DOWN
+      else:
+        action = control.AltitudeControlCommand.STAY
     else:
       if steps % DECIDE_EVERY == 0:
         pr = pressure_range_builder.get_pressure_range(s, arena._atmosphere)
@@ -178,16 +193,21 @@ def fly(job):
 
 def main():
   quick = '--quick' in sys.argv
+  ctrls = CONTROLLERS
+  if '--controllers' in sys.argv:
+    ctrls = sys.argv[sys.argv.index('--controllers') + 1].split(',')
   starts = [dt.datetime(2025, m, d, 6, tzinfo=dt.timezone.utc)
             for m in range(1, 13) for d in (1, 15)]
   sites = list(LAUNCH.items())
   if quick:
     starts, sites = starts[::8], sites[:2]
-  jobs = [(n, la, lo, st, k, 7919 * i + 31 * j + c)
+  jobs = [(n, la, lo, st, k, 7919 * i + 31 * j + SEED_C[k])
           for i, (n, (la, lo)) in enumerate(sites)
-          for j, st in enumerate(starts) for c, k in enumerate(CONTROLLERS)]
+          for j, st in enumerate(starts) for k in ctrls]
   os.makedirs('results', exist_ok=True)
   out = 'results/drift_quick.csv' if quick else 'results/drift_2025.csv'
+  if ctrls != CONTROLLERS:
+    out = out.replace('.csv', '_' + '_'.join(ctrls) + '.csv')
   t, rows = time.time(), []
   with mp.get_context('spawn').Pool(8) as pool:
     for k, r in enumerate(pool.imap_unordered(fly, jobs)):
