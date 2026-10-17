@@ -90,7 +90,8 @@ $('region').setAttribute('d', 'M' + D.region.map(p => p.join(',')).join('L') + '
 const launchEls = Object.entries(D.launch).map(([n, [x, y]]) => {
   const g = el('g', { opacity: 0 }, $('launchG'));
   el('circle', { cx: x, cy: y, r: 2.4, fill: SITE_COL[n], stroke: '#0a101c', 'stroke-width': 0.6 }, g);
-  const tx = el('text', { x: x + 4, y: y - 3, 'font-size': 7, fill: '#e8edf5' }, g); tx.textContent = n;
+  const dy = n === 'Dublin' ? 11 : -3;  // Dublin's label sat on the scene subtitle; keep it below its dot
+  const tx = el('text', { x: x + 4, y: y + dy, 'font-size': 7, fill: '#e8edf5' }, g); tx.textContent = n;
   return g;
 });
 const siteEls = Object.entries(D.sites).filter(([n]) => n !== 'Black Sea (mid)').map(([n, [x, y]]) => {
