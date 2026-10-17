@@ -1,0 +1,34 @@
+# Mission packages on a mixed fleet
+
+*Research note, 2026-10-17. Answers one question from the author: does a mix of light and heavy vehicles, carrying different packages for emergency services, including infrared cameras, make the layer more attractive? Yes, and the weakness register (W32, capability creep) says how it goes wrong. Builds on `results/deployable_now.md`, `results/radio_and_backhaul.md` and `results/target_population.md`. Costs are estimates.*
+
+## The fleet is already mixed
+
+The upgrade path's readiness phase is heavy hubs with light spokes. The heavy vehicle, the class M payload of 90–100 kg, carries the big array, the optical terminals and the power to run them; in mass it is the simulator's own balloon, so its drift and dwell are the tracks already in `results/`. The light vehicle, 40 kg, carries a Loon-class cell and nothing else, and it is the one that has not flown. A mixed fleet is not an option to add; it is what the numbers already assume. What a package adds is a reason for a buyer to want a particular balloon over a particular place, and that is where the appeal comes from.
+
+## What emergency services would pay for, in order
+
+1. **The cell itself.** For search and rescue the strongest instrument on the balloon is the LTE cell, not a camera. A phone that attaches to the cell is located by timing and angle across two or three balloons to a few hundred metres, in cloud, at night, under canopy, and it can be rung. No imager does that. The 112 location problem in the register (W42) is the same capability seen from the other side, and solving it for 112 solves it for rescue.
+2. **Priority and push-to-talk for responders.** Already in the pilot: priority classes the host sets, group calls, location sharing. This is the Loon-in-Puerto-Rico service and the one civil-protection agencies have bought before.
+3. **A wide-field thermal imager for fire fronts.** The Mediterranean summer case: three balloons over a 300 km zone at 1.3–2 launches a day (`medium_body.md`, fire watch). The instrument that serves it is a wide-field uncooled infrared imager with a ground sample of tens of metres, the class of the satellite fire products agencies already use, refreshed every few minutes instead of every few hours and under the host agency's own control. A 2–5 kg imager at 10–30 W fits a light vehicle; the hub carries the backhaul for it. Estimate €50–200 k an instrument, qualified.
+4. **Search imaging.** A medium-field thermal imager with a ground sample of a few metres, for a person or a boat in a known search box, on request, over the host's own territory and sea. Useful, and the first package that starts to look like reconnaissance from outside, so it carries the rules below.
+5. **Air-quality and smoke.** A few hundred grams of sensors, trivial mass, real value to the fire and health agencies after an industrial fire. Cheap to add once the imager's data path exists.
+
+What is not on the list, and stays off it in the civil case: high-resolution mapping cameras (the 0.25–0.7 m figure in the draft), ship-tracking receivers, jammer geolocation and anti-jam arrays. The register's W32 is exact about why: in a connectivity proposal they invite the surveillance reading, an export-control reply and a neighbour's air-defence reading, and the Belarus 1995 and February 2023 cases are what that reading does to a balloon. The deployable-now note already lists them off the table at every phase.
+
+## Package discipline
+
+Four rules make the packages above sellable without turning the layer into something a neighbour shoots at.
+
+- **Published capability.** Each package has a public ground-sample distance, swath and data product, and the fire imager's is coarse enough that nobody reads it as mapping.
+- **Territory, enforced on the payload.** Imaging packages fly only on flights whose forecast track stays inside the host state and its own waters. The geofence lives in the payload, not in the operations room: the imager closes itself from the balloon's own position fix against a polygon loaded before launch, writes the shutter log on board, and cannot be opened from the ground outside the polygon. A shutter commanded from the ground is a policy; one that closes itself is a fact a neighbour can be shown. No imaging payload on any flight that may cross a border; the cell flies everywhere the host authorises, the imager does not.
+- **Custody.** Imagery goes to the host civil-protection agency, under its law, with the same data-protection footing as its aircraft and drones. Not to the operator, not to the network.
+- **Identification.** The packaged balloon squawks what it is, as every balloon in the layer does, and the host publishes the package list the way it publishes its firefighting fleet.
+
+## What it does to the cost case
+
+Little, and in the right direction. The packages ride on the fleet the cost case already prices; an imager is a few per cent of a flight's cost and the ground data path is shared with the cell's. What changes is utilisation: a summer fire-watch service gives the standing layer a job in the season when balloons dwell longest and the connectivity demand is lowest, which is the season the readiness cost is hardest to justify. Three balloons on fire watch for a 120-day season is 160–240 launches, €2–3 M at the placeholder flight price, against a rescEU aerial firefighting fleet whose aircraft cost tens of millions each. That comparison is the sentence a civil-protection buyer reads first.
+
+## What the draft should say
+
+The article's "What" bullet lists thermal cameras, ship-tracking receivers and anti-jam arrays, and the fire-watch paragraph gives a 0.25–0.7 m mapping resolution shuttered outside allied airspace. Both sentences carry the reconnaissance reading. The replacement is in `medium/revision_2026-10-17.md`, item 8: the cell as the rescue instrument, wide-field fire imaging under the host's custody, the mapping figure removed, ship tracking and anti-jam arrays removed from the civil case.
