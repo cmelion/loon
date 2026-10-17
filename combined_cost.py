@@ -30,6 +30,11 @@ REFURB = (0.05, 0.10, 0.20)               # per reuse, cost_model range
 GIG_PICKUP = (0.35, 0.5, 0.8)             # recovery line multiplier, ASSUMPTION
 DWELL_MULT = (1.6, 1.35, 1.15)            # launch-site choice; hindsight best-of-date gave 1.62-1.75
 FOOTPRINT = (0.45, 0.49, 0.6)             # cost_reduction L7 (optional)
+# envelope_cost.py redesign (low-Δp thin-film pumpkin at volume, 40 kg payload):
+# per-envelope P10/mode/P90 of the stacked best realistic case. Replaces the
+# payload-proportional scaling above, which envelope_cost.py showed is too
+# optimistic for an unchanged design.
+ENVELOPE_REDESIGN_EUR = (391, 1_068, 2_879)
 
 
 def payload_consumed(rec, life, refurb):
@@ -41,7 +46,7 @@ def main():
   base_cons = payload_consumed(0.78, 15, 0.10)
   rows = []
   for k, name in enumerate(('best', 'mid', 'worst')):
-    env = BASE_PER_FLIGHT['envelope'] * (0.74 * PAYLOAD_KG[k]) / 68.5 * ENV_LEARNING[k]
+    env = ENVELOPE_REDESIGN_EUR[k]
     pay = (BASE_PER_FLIGHT['payload'] * PAYLOAD_UNIT[k] *
            payload_consumed(RECOVERY[k], PAYLOAD_LIFE[k], REFURB[k]) / base_cons)
     rec = BASE_PER_FLIGHT['recovery'] * GIG_PICKUP[k]
