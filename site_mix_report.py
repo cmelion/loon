@@ -271,8 +271,59 @@ def sweep():
   print('Frontier appearances by site (of', tot, 'frontier points):', {k: v for k, v in sorted(cnt.items(), key=lambda kv: -kv[1])})
 
 
+
+
+def markets():
+  """Section 5b: split each Canada flight's pre-Europe days by market (estimated from day counts;
+  the run files hold no positions) and the days-weighted cost split. Writes results/site_mix_canada_markets.csv."""
+  import json
+  rows = []
+  for tag, path in [('ncep', 'results/multipass_2025_nochina_bat10000_thrust3_canada.jsonl'),
+                    ('era5', 'results/multipass_2025_nochina_bat10000_thrust3_canada_era5.jsonl')]:
+    for line in open(path):
+      r = json.loads(line)
+      d = np.asarray(r['daily_eu_h'], float)
+      a = int(np.nonzero(d > 0)[0][0]); k = a
+      while k + 1 < len(d) and d[k + 1] > d[k]:
+        k += 1
+      transit = (24 * (a + 1) - d[a]) / 24.0
+      first = d[k] / 24.0
+      canada_s = min(r['canada_days'], transit)                    # southern band, <= 60N (canada.py mask), capped at the first leg
+      atlantic = min(r['atlantic_days'], transit - canada_s)       # 40-60N, 52-10W band
+      other = transit - canada_s - atlantic                        # north of 60N, or the eastern Pacific
+      rows.append(dict(winds=tag, site=r['site'], month=r['month'], transit_d=transit, europe_first_pass_d=first,
+                       canada_south_d=canada_s, atlantic_d=atlantic, north_or_pacific_d=other,
+                       max_lat=r['max_lat'], polar_h=r.get('polar_h', np.nan), passes=r['passes'], end=r['end']))
+  m = pd.DataFrame(rows)
+  m['season'] = m.month.map(lambda x: 'DJF' if x in (12, 1, 2) else 'MAM' if x in (3, 4, 5) else 'JJA' if x in (6, 7, 8) else 'SON')
+  m.to_csv('results/site_mix_canada_markets.csv', index=False)
+  cols = ['transit_d', 'canada_south_d', 'atlantic_d', 'north_or_pacific_d', 'europe_first_pass_d']
+  g = m.groupby('season')[cols].mean().reindex(['DJF', 'MAM', 'JJA', 'SON'])
+  g.loc['year'] = m[cols].mean()
+  tot = m.groupby('season').apply(lambda x: x.europe_first_pass_d.sum() / (x.europe_first_pass_d + x.transit_d).sum(), include_groups=False)
+  g['Europe share of days'] = tot.reindex(g.index)
+  g.loc['year', 'Europe share of days'] = m.europe_first_pass_d.sum() / (m.europe_first_pass_d + m.transit_d).sum()
+  section('Canada flight, days by market before termination over Europe (72 flights; Canada and Atlantic measured by mask, the split estimated)')
+  print(md(g.reset_index().rename(columns={'season': 'season of launch', 'transit_d': 'transit d', 'canada_south_d': 'Canada south of 60N d',
+                                           'atlantic_d': 'Atlantic 40-60N d', 'north_or_pacific_d': 'north of 60N or Pacific d',
+                                           'europe_first_pass_d': 'Europe first pass d'}), '{:.2f}'))
+  print(f"Peak latitude at or above 61.6N (needed to come within 200 km of Iceland): {100 * (m.max_lat >= 61.6).mean():.0f} % of flights "
+        f"(ERA5 {100 * (m[m.winds == 'era5'].max_lat >= 61.6).mean():.0f} %, NCEP {100 * (m[m.winds == 'ncep'].max_lat >= 61.6).mean():.0f} %); "
+        f"above the Arctic Circle {100 * (m.max_lat >= 66.5).mean():.0f} %; ERA5 flights spend {m[m.winds == 'era5'].polar_h.mean():.0f} h above 66.5N on average.")
+  for name, b in [('Canada south band 49-60N, 141-52W', dict(lat0=49, lat1=60, lon0=-141, lon1=-52)),
+                  ('Canadian Arctic 60-70N, 141-60W', dict(lat0=60, lat1=70, lon0=-141, lon1=-60)),
+                  ('North Atlantic lanes 45-62N, 50-10W', dict(lat0=45, lat1=62, lon0=-50, lon1=-10)),
+                  ('Iceland, Faroes, Greenland coast box 60-67N, 45-5W', dict(lat0=60, lat1=67, lon0=-45, lon1=-5)),
+                  ('Atlantic mask of the run files 40-60N, 52-10W', dict(lat0=40, lat1=60, lon0=-52, lon1=-10)),
+                  ('Grand Banks and Flemish Cap 42-49N, 52-42W', dict(lat0=42, lat1=49, lon0=-52, lon1=-42)),
+                  ('Iceland and Faroes waters 60-67N, 30-3W', dict(lat0=60, lat1=67, lon0=-30, lon1=-3)),
+                  ('Norwegian Sea 62-75N, 5W-20E', dict(lat0=62, lat1=75, lon0=-5, lon1=20))]:
+    km2 = box_km2(b)
+    print(f'{name}: {km2 / 1e6:.2f} M km2; one 80 km disc covers {100 * math.pi * 80 ** 2 / km2:.2f} % of it, a 200 km disc {100 * math.pi * 200 ** 2 / km2:.1f} %.')
+
+
 if __name__ == '__main__':
   pd.set_option('display.width', 250)
-  what = sys.argv[1:] or ['inputs', 'singles', 'shares', 'sweep']
+  what = sys.argv[1:] or ['inputs', 'singles', 'shares', 'sweep', 'markets']
   for w in what:
     globals()[w]()
