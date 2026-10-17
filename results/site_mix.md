@@ -20,17 +20,27 @@ Every number is marked **measured** (read from a track or run file, or a replay 
 - Tallinn never earns its place: adding it lowers coverage per euro in 97–98 % of the 255 sets that lack
   it. Riga lowers it in 80–90 %, Bucharest is neutral, and the four western and central sites plus
   Copenhagen and Gothenburg raise it in 80–100 % of sets.
-- The Canada baseload fails on cost and does not help in the north. A Canada flight delivers one
-  first pass over Europe of 3.35 launch-weighted days (measured), about the same as a Brest launch
-  (4.3) or the five sites together (3.6). At the €33,000 a flight assumed here it costs three times a
-  light flight, so 50 Canada balloons aloft cost €128 M a year for 5.9 % of the region against €53 M
-  for 8.9 % from the five sites. The flight would have to cost €9,000–14,000, at or below the light
-  disposable flight, to break even on area coverage per euro (estimated). Canada balloons enter at the
-  jet's latitude under the 56°N guard and give the northern box 2 % coverage, nothing from January to May.
-  Replacing half of any European set's layer with Canada lowered coverage per euro in 96–98 % of the
-  511 sets; no Canada configuration is on the frontier. The hypothesis is rejected on 2025 winds for
-  the simulated vehicle with termination over Europe; the conditions under which it could revive are
-  listed in section 5.
+- The Canada baseload, scored two ways. As a single-customer flight, paid for by Europe alone, it fails:
+  a Canada flight delivers one first pass over Europe of 3.35 launch-weighted days (measured), about the
+  same as a Brest launch (4.3) or the five sites together (3.6); at the €33,000 a flight assumed here,
+  three times a light flight, 50 Canada balloons aloft cost €128 M a year for 5.9 % of the region against
+  €53 M for 8.9 % from the five sites, and the flight would have to cost €9,000–14,000 to break even on
+  area per euro (estimated). As a multi-customer flight, with each market paying for its own served days,
+  Europe's share is 46 % of the flight (41 % in winter, 56 % in summer, measured day counts); at €33,000
+  Europe pays €15,250 a flight and still falls short of the frontier (0.10–0.15 % of the region per €M
+  against 0.17), and clears it only if the whole flight costs under €20,000–30,000 while Canadian,
+  Atlantic and Arctic customers pay the other 54 %: about €1,900–2,400 for every balloon-day over them,
+  two-thirds of what a European balloon-day costs from the light vehicle (estimated, section 5b). In
+  either scoring the Canada balloons enter at the jet's latitude under the 56°N guard and give the
+  northern box 2 %, nothing from January to May; the run with the guard lifted (section 7, item 4) is
+  what would test the northern claim. For Canada to carry the baseload, then, there would have to be
+  paying customers for 5 balloon-days a flight over Canada's 49–60°N band, 2.6 over the North Atlantic
+  lanes and fishing grounds (a market in its own right, served today almost only by Starlink; at 10–30
+  vessels or aircraft under each balloon its days could pay their share at today's list prices, estimated)
+  and 2.2 over the Arctic or the eastern Pacific, each paying about two-thirds of Europe's rate,
+  and a 60-day fuel-cell-and-propeller flight priced at or below €30,000. The single-customer verdict
+  stands on 2025 winds for the simulated vehicle with termination over Europe; the multi-customer one
+  moves Canada from rejected to conditional on those customers and that price.
 - Population weighting was not possible: no population grid is on this machine, so every coverage figure
   is a share of area, with the share of 21 large cities as a crude check. `site_mix.py --pop <file>`
   adds a population column once a GHSL or GEOSTAT file is downloaded.
@@ -330,6 +340,148 @@ reason outside coverage, such as launching from outside the region being served,
 not measure; (d) positions logged in the Canada runs, which would replace the proxy and fix the packing
 figure that moves the break-even between €9,000 and €14,000.
 
+## 5b. The Canada flight as a multi-market flight
+
+Section 5 charged the whole Canada flight to one customer, area over Europe, and counted its days over
+Canada and the North Atlantic as nothing. The author's objection is that a Canada launch serves Canada,
+possibly Iceland, the Atlantic shipping and aviation lanes and Europe on the same flight, so the fair test
+is a multi-market denominator and a cost split. This section does that with what the run files hold.
+
+**What can be measured.** The Canada run files log, per flight, days inside a Canada mask (south of 60°N,
+`canada.py`), days inside a North Atlantic band (40–60°N, 52–10°W), sector days by longitude, peak latitude
+and, on ERA5, hours above the Arctic Circle. They hold no positions. Under the premise that every flight
+terminates over Europe at the end of its first pass, the days a flight can sell are the transit days before
+entry plus the first pass. The transit is split by mask: Canada south of 60°N (measured, capped at the
+transit), the Atlantic band (measured, capped at what the transit leaves), and a remainder that is north of
+60°N (the Canadian Arctic, Davis Strait, Greenland and the Iceland approaches) or over the eastern Pacific
+on the flights that drifted west first; the files cannot separate those two. Per flight, mean of 72
+(`results/site_mix_canada_markets.csv`, `site_mix_report.py markets`):
+
+| season of launch | transit d | Canada south of 60°N d | Atlantic 40–60°N d | north of 60°N or Pacific d | Europe first pass d | Europe share of days |
+|---|---|---|---|---|---|---|
+| DJF | 4.2 | 2.8 | 0.7 | 0.7 | 3.0 | 41 % |
+| MAM | 12.1 | 4.8 | 2.7 | 4.6 | 9.1 | 43 % |
+| JJA | 12.9 | 6.7 | 4.4 | 1.8 | 16.2 | 56 % |
+| SON | 10.1 | 6.0 | 2.4 | 1.7 | 5.5 | 35 % |
+| year | 9.8 | 5.1 | 2.6 | 2.2 | 8.5 | 46 % |
+
+Europe's share of the sellable days is 46 % over the year (days-weighted across the 72 flights), the same
+figure as the rerun note's useful share by coincidence: there the denominator was the 60-day flight, here
+it is the first-pass flight. NCEP and ERA5 agree within a day on every column.
+
+**Iceland.** The share of flights passing within 200 km of Iceland cannot be measured from these files.
+A necessary condition is a peak latitude of at least 61.6°N (Iceland's south coast less 200 km): 68 % of
+flights meet it (75 % on ERA5, 61 % on NCEP), 54 % cross the Arctic Circle, and the ERA5 flights spend 39
+hours above 66.5°N on average (measured). Whether those excursions are over Iceland, Greenland, Hudson Bay or
+the Pacific is unknown; the true share is somewhere between zero and 68 %, and positions would settle it.
+
+**Coverage per market.** One 80 km disc is 0.29 % of the Canada southern band (49–60°N, 141–52°W, 7.0 M km²),
+0.48 % of the Canadian Arctic box (60–70°N, 4.2 M km²), 0.40 % of the North Atlantic lanes box (45–62°N,
+50–10°W, 5.0 M km²), 1.3 % of an Iceland, Faroes and Greenland-coast box (60–67°N, 45–5°W, 1.5 M km²; 8.1 %
+for a 200 km disc) and 0.20 % of Europe. A flight therefore sells about 5.1 balloon-days over a band of
+7 M km², 2.6 over the lanes, 2.2 over the far north or the Pacific and 8.5 over Europe. The people and
+traffic under those days, all **estimated** from public figures and to be verified before use: the 49–60°N
+band holds roughly 6–8 M Canadians (Vancouver, Calgary, Edmonton, Saskatoon, Regina and Winnipeg sit at
+49–54°N; Toronto and Montréal are south of the band); the three northern territories about 130,000, the
+market where a layer is worth most per person and least in total; Iceland 390,000, the Faroes 54,000,
+Greenland 57,000; the North Atlantic tracks carry on the order of 1,300–1,700 flights a day and the lanes
+a few thousand ships at sea at any time, the one market where the customer moves and the cell need not.
+A lane is a line, and a balloon within 80 km of it is a question the position log would answer; the box
+share above overstates what a lane customer gets.
+
+**Cost split.** If each market pays for its own served days, Europe pays 46 % of the flight. At the €33,000
+assumption that is €15,250 a flight (€13,600 for a winter launch, €18,500 for a summer one). Europe's
+annual bill for 50 aloft is then 3,875 × €15,250 = €59 M against €53 M for the five sites, for 5.9 %
+of the region against 8.9 %: 0.10 % per €M as replayed, or 0.15 % if Canada balloons packed as well as
+the European ones, against the five sites' 0.17 and the frontier's 0.19 (estimated). Europe's share
+does not clear the frontier at €33,000. It clears it when the whole flight costs no more than €30,100
+(equal packing) or €19,900 (replayed packing), the section 5 break-evens divided by Europe's 46 %.
+
+**Break-even per market.** Turn it round: let Europe pay exactly its frontier price, €9,200–13,900 a
+flight, and ask what the others must pay for a €33,000 flight to be funded. They must find €19,100–23,800
+a flight over 9.8 transit days: €1,900–2,400 per balloon-day, against the €3,080 a European balloon-day
+costs from the light vehicle at the five sites (€2,580 from Brest). Per flight that is roughly €9,800–12,300
+from Canada's southern band, €5,000–6,200 from the Atlantic lanes and €4,300–5,300 from the far north or
+the Pacific; for the 3,875-flight layer, €38–48 M, €19–24 M and €17–21 M a year beside Europe's
+€36–54 M. Each market would have to value a balloon-day at about two-thirds of what Europe pays for one
+from a disposable light balloon. The Canadian southern band at 6–8 M people under 7 M km² is a thinner
+market per balloon-day than Europe's; the lanes and the Arctic are thinner still in people and richer in
+the one thing the stratosphere offers them, which is that nothing else covers them. Whether anyone pays
+€2,000 a balloon-day for that is a question for a buyer, not for the replay.
+
+**Fishing grounds and transit lanes.** The author's second addition: the North Atlantic market is the
+transit lanes (the great-circle shipping routes and the NAT aviation tracks) and, separately, the fishing
+fleets on the Grand Banks and the Flemish Cap, in the waters around Iceland and the Faroes, and in the
+Norwegian Sea. The run files cannot separate them: the Atlantic figure is one mask, 40–60°N and 52–10°W.
+Stated boxes, with the share of each a single 80 km disc covers (measured geometry):
+
+| box | extent | area M km² | one 80 km disc | where it falls in the day counts |
+|---|---|---|---|---|
+| Atlantic mask (the measured band) | 40–60°N, 52–10°W | 6.64 | 0.30 % | 2.6 d a flight |
+| Transit lanes | 45–62°N, 50–10°W | 4.98 | 0.40 % | inside the mask except its northern 2° |
+| Grand Banks and Flemish Cap | 42–49°N, 52–42°W | 0.61 | 3.3 % | inside the mask, 9 % of its area |
+| Iceland and Faroes waters | 60–67°N, 30–3°W | 1.04 | 1.9 % | in the north-of-60°N remainder, 2.2 d |
+| Norwegian Sea | 62–75°N, 5°W–20°E | 1.47 | 1.4 % | in the remainder; outside the region, so before entry |
+
+If a flight's 2.6 Atlantic days were spread evenly over the mask, 0.23 of them would be over the Banks
+and 2.3 over the lanes (estimated, geometry only). They are not spread evenly: the launches drift east at
+50–56°N, north of the Banks, so the fishing share of the band is probably below that prior, while the
+Iceland, Faroes and Norwegian Sea grounds sit in the 2.2 days a flight spends north of 60°N or over the
+Pacific, which 68 % of flights could reach by peak latitude. No AIS or ADS-B density is on this machine;
+traffic weighting is still to do, and a position log from the engine is the measurement that would
+split the days. In the cost split the fishing fleets are a separate customer whose days are between zero
+and about 0.2 a flight in the band plus an unknown part of the 2.2 northern days; at €1,900–2,400 a
+balloon-day that is up to €500 a flight from the Banks and up to €5,000 from the northern grounds,
+against €4,400–5,600 from the lanes.
+
+**The Atlantic as a market in its own right.** The author's framing, which this study accepts: the North
+Atlantic is a real coverage gap served today almost only by Starlink's maritime and aviation services,
+with geostationary VSAT and the L-band services (Inmarsat, Iridium) as the thin alternatives, so a
+European fishing fleet, ferry or airline over that water depends on the same foreign operator the article
+opens with. A stratospheric layer over the lanes is therefore a sovereignty product, not a by-product of
+flights bound for Europe. The geometry favours it: from 20 km a balloon is on a ship's or aircraft's
+horizon at about 505 km and holds a 5°-elevation link to about 194 km (`results/radio_and_backhaul.md`),
+so one balloon serves a disc of 118,000 km² of ocean, 2.4 % of the lanes box, with a directional terminal
+on the vessel rather than the 80 km terrestrial cell. The 3,875-flight Canada layer puts 2.6 × 3,875 /
+365 = 27 balloons over the Atlantic band on average (measured days, estimated layer), which at 194 km is
+up to 64 % of the lanes box if the discs never overlapped, less along the one corridor they actually fly.
+
+What the Atlantic days would have to earn. Days-weighted at €33,000 a flight, an Atlantic balloon-day
+costs €1,800; at the break-even band of €19,900–30,100 it costs €1,100–1,650; with Europe paying only its
+frontier price and the other markets filling the gap, €1,900–2,400. Who is under the balloon: the NAT
+tracks carry on the order of 1,300–1,700 flights a day, each about five to six hours over the ocean, so
+some 300–400 aircraft are airborne over the North Atlantic at any instant, one per 13,000–17,000 km² if
+spread evenly, which is seven to nine aircraft inside a 194 km disc and more in the track corridor; ships
+at sea in the North Atlantic number a few thousand at any time, a similar density. Call it 10–30 customers
+under a balloon as a planning range (estimated; the AIS and ADS-B counts replace it). The Atlantic days
+then carry their share of the flight at €40–240 per customer-day. Today's list prices, approximate and to
+be checked before use: Starlink maritime plans run from a few hundred to several thousand dollars a month
+depending on the data allowance, roughly €10–160 a day per vessel; Starlink Aviation roughly $2,000–10,000
+a month, €65–330 a day per aircraft; maritime Ku-band VSAT roughly $1,500–5,000 a month; L-band
+(FleetBroadband, Certus) hundreds to low thousands a month with per-megabyte charges. The needed €40–240 a
+day sits inside the aviation band and at the upper end of the maritime band. So at 10–30 customers under
+each balloon the Atlantic days could pay their way at today's prices, at fewer than about five they could
+not, and the capacity caveat is real: a 20 Mbps class-L cell shared by 10–30 vessels is not Starlink's
+per-terminal rate, so the product is availability under European control, not bandwidth parity.
+
+Two consequences for the site study. First, the Atlantic market does not need Canada: a layer meant for
+the lanes and the Banks would be launched from Newfoundland (St John's, 47.6°N, 52.7°W) or western Ireland
+and would not spend five days over the prairies first; Iceland is above BLE's 60°N solar limit. That run
+belongs on the band grid (`run_multipass.py` with a Newfoundland launch set) and is added to section 7.
+Second, the Canada baseload's case now rests on three customers paying together, Canada's band, the
+Atlantic lanes and fleets, and Europe, with the fishing fleets a fourth whose days are unmeasured; the
+flight is funded if each pays about two-thirds of Europe's rate per balloon-day, and the Atlantic
+customers' ability to do so at list prices turns on their density under the balloon.
+
+**What does not change.** The 56°N latitude guard kept every Canada flight out of the northern box over
+Europe (2 % of the box over the year, nothing from January to May), so the northern job stays with the
+Nordic sites under either scoring; the run with the guard lifted over the Atlantic approach (section 7,
+item 4) is the test of the northern claim. The conditions stand: termination over Europe after the first
+pass, the simulated 10 kWh and 3 m/s vehicle, one wind year, the €33,000 price as an assumption, and the
+proxy geometry for packing. The multi-customer scoring moves the Canada baseload from rejected to
+conditional: it needs the customers named above, at about two-thirds of Europe's rate, and a flight price
+at or below €30,000.
+
 ## 6. Sites that never earn their place, and candidates
 
 **Never earns its place: Tallinn.** It lowers coverage per euro in 98 % of the sets that lack it at 50
@@ -377,7 +529,11 @@ expectation below is a hypothesis):
 4. If the Canada question is kept open after this note, re-fly it with the latitude guard lifted over
    the Atlantic approach (`CORRIDOR_HI` and `LAT_HI` in `run_multipass.py`) so the conveyor can enter
    north of 56°N; that is the only version of the hypothesis that could reach the northern box.
-5. Download a population grid (GHSL GHS-POP 2025 at 1 km, or Eurostat GEOSTAT 2021) and rerun
+5. A North Atlantic launch set on the band grid (St John's, 47.6°N, 52.7°W, and a western Irish site),
+   `run_multipass.py` with positions logged, to size an Atlantic lanes-and-fleets layer on its own
+   rather than as a by-product of Canada flights; and AIS and ADS-B density over the lane and fishing
+   boxes of section 5b, to replace the 10–30 customers-per-balloon planning range.
+6. Download a population grid (GHSL GHS-POP 2025 at 1 km, or Eurostat GEOSTAT 2021) and rerun
    `site_mix.py --pop <file>`; the area-based frontier will shift toward sites that cover the Rhine,
    Po and Danube basins, which probably favours Vienna and Brest further.
 
@@ -395,5 +551,6 @@ Copenhagen and Gothenburg over Riga over Tallinn is the same in every period and
 
 Files: `results/site_mix_scores.csv` (the sweep), `results/site_mix_singles.csv`,
 `results/site_mix_shares.csv`, `results/site_mix_cells_cells.csv`, `results/site_mix_canada_first_pass.csv`,
+`results/site_mix_canada_markets.csv` (section 5b),
 `results/site_mix_canada_proxy_tracks.csv`; scripts `site_mix.py`, `site_mix_report.py`; `replay.py`
 fixed as described; `run_drift.py` gains `LAUNCH_SET=candidates`. Nothing committed.
