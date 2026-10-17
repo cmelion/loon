@@ -10,10 +10,11 @@ Black Sea.
 | Study | Script | Result |
 |---|---|---|
 | Station-keeping at 22 European / Black Sea sites, 2 flights/month | `run_coverage.py`, `analyze.py` | ~4% time within 50 km (vs 38% for the same controller in stock tropical BLE). Winter westerlies leave nothing to steer with. |
-| Slow-traversal fleet (steer for the lowest wind), 5 launch sites × 24 dates × 3 controllers | `run_drift.py`, `analyze_drift.py` | Mean 5.4 days over region per balloon (3.2 passive) → ~310 launches/day for full 50 km-cell coverage. Winter ~1.5 days. |
+| Slow-traversal fleet (steer for the lowest wind), 5 launch sites × 24 dates × 3 controllers | `run_drift.py`, `analyze_drift.py` | Mean 5.4 days over region per balloon (3.2 passive); winter ~1.5 days. ~310 launches/day only if balloons tiled the region perfectly; with random spacing, ~95% coverage needs ~1,100/day (see cost model). |
 | Radio return by glider | `glide.py`, `glider_sizing.py` | 78% recovered at 16 kg/m² wing loading, 94% at 29 kg/m² (L/D 12): heavier gliders penetrate headwinds better. |
 | Envelope landing after cut-down | `analyze_envelopes.py` | 66% land on land; median 26 km parachute drift. |
 | Burning the envelope at altitude | `burn_sim.py` | Median 90% consumed but film shreds scatter over ~200 km; ~215 kg CO₂ per balloon if fully burnt. Not safer than parachute cut-down. |
+| Cost vs satellite systems | `cost_model.py` → `results/cost_comparison.md` | ~€15.5 B/yr (€10.6–22.1 B) for ~95% year-round coverage, ~53× Starlink's attributable cost per km². Envelope and payload costs dominate; hydrogen is ~0.3%. |
 
 Charts and per-flight CSVs are in `results/`.
 
