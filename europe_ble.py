@@ -12,6 +12,7 @@ Stock BLE uses synthetic (VAE-generated) winds and places balloons within
 """
 import datetime as dt
 import math
+import os
 
 import jax
 import numpy as np
@@ -21,20 +22,45 @@ from balloon_learning_environment.env import balloon_arena, features, wind_field
 from balloon_learning_environment.env.balloon import balloon, control, stable_init
 from balloon_learning_environment.utils import sampling, units
 
-T0 = dt.datetime(2025, 1, 1, tzinfo=dt.timezone.utc)
+DEFAULT_GRID = os.environ.get('WIND_GRID', 'data/gfs_europe_2025.npz')
+
+
+def _epoch(t0_value):
+  """Epoch of a wind file: its t0 key ('2025-01-01T00' or '2025-01-01T00:00'), as UTC."""
+  d = np.datetime64(str(t0_value), 's').astype(dt.datetime)
+  return d.replace(tzinfo=dt.timezone.utc)
+
+
+def _default_epoch():
+  try:
+    with np.load(DEFAULT_GRID) as d:
+      if 't0' in d:
+        return _epoch(d['t0'])
+  except (OSError, ValueError):
+    pass
+  return dt.datetime(2025, 1, 1, tzinfo=dt.timezone.utc)
+
+
+# Epoch of the default grid: scripts date launches relative to this. Set
+# WIND_GRID to a file from another year (fetch_era5.py) and T0 follows it.
+T0 = _default_epoch()
 EARTH_KM = 6371.0
 
 
 class WindGrid:
   """Gridded u/v [lat, lon, level, t] with vectorised trilinear lookup.
 
-  Optional npz keys: dt_h (hours per time step, default 1) and ring (lons
+  Optional npz keys: t0 (epoch of the time axis, default 2025-01-01T00Z),
+  dt_h (hours per time step, default 1) and ring (lons
   form a full 360° ring: longitudes wrap and time wraps around the year, so
   flights running into 2026 reuse early-2025 winds).
   """
 
-  def __init__(self, path='data/gfs_europe_2025.npz'):
+  def __init__(self, path=None):
+    path = path or DEFAULT_GRID
     d = np.load(path)
+    self.path = path
+    self.t0 = _epoch(d['t0']) if 't0' in d else T0
     self.u, self.v = d['u'], d['v']
     self.lats, self.lons = d['lats'], d['lons']
     self.logp = np.log(d['levels_hpa'] * 100.0)  # Pa, decreasing
@@ -98,7 +124,7 @@ class EuropeWindField(wind_field.WindField):
     self.start_hours = 0.0
 
   def reset_forecast(self, unused_key, date_time: dt.datetime) -> None:
-    self.start_hours = (date_time - T0).total_seconds() / 3600.0
+    self.start_hours = (date_time - self.grid.t0).total_seconds() / 3600.0
 
   def _uv(self, x, y, pressures, elapsed):
     lat, lon = offset_to_latlng(self.lat0, self.lon0, x.km, y.km)

@@ -209,7 +209,8 @@ def main():
   ctrls = CONTROLLERS
   if '--controllers' in sys.argv:
     ctrls = sys.argv[sys.argv.index('--controllers') + 1].split(',')
-  starts = [dt.datetime(2025, m, d, 6, tzinfo=dt.timezone.utc)
+  year = int(os.environ.get('YEAR', eb.T0.year))  # follows WIND_GRID's epoch unless overridden
+  starts = [dt.datetime(year, m, d, 6, tzinfo=dt.timezone.utc)
             for m in range(1, 13) for d in (1, 15)]
   sites = list(LAUNCH.items())
   if quick:
@@ -218,7 +219,7 @@ def main():
           for i, (n, (la, lo)) in enumerate(sites)
           for j, st in enumerate(starts) for k in ctrls]
   os.makedirs('results', exist_ok=True)
-  out = 'results/drift_quick.csv' if quick else 'results/drift_2025.csv'
+  out = 'results/drift_quick.csv' if quick else f'results/drift_{year}.csv'
   if ctrls != CONTROLLERS:
     out = out.replace('.csv', '_' + '_'.join(ctrls) + '.csv')
   t, rows = time.time(), []

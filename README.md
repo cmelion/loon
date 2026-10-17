@@ -48,6 +48,8 @@ Regenerate with `fetch.py` (throttled for the free tier, ~40 min).
 
 `data/ncep_band_2025.npz` (not committed, 72 MB): NCEP/NCAR Reanalysis-1 2025 winds, 25–70°N, all longitudes, 6-hourly, from NOAA PSL. Download `uwnd.2025.nc` and `vwnd.2025.nc` from https://downloads.psl.noaa.gov/Datasets/ncep.reanalysis/pressure/ and run `python subset_ncep.py <dir>`.
 
+`data/era5_*.npz` (not committed): ERA5 pressure-level winds per year from `fetch_era5.py`, in the same layout with a `t0` key; see `docs/reruns_era5.md`.
+
 ## Reviews
 
 - `medium/review.md`: internal fact-check of the Medium draft against `results/` (2026-10-17).
@@ -57,6 +59,12 @@ Regenerate with `fetch.py` (throttled for the free tier, ~40 min).
 - `results/weakness_register.md` and `results/mitigation_research.md`: every weakness found to date (W1–W50) and the adjudicated mitigation for each from a four-cluster external review; four architecture decisions (winter is a transit product, the radio is Loon-class until proven, recovery by parachute to drop zones rather than glider, exercised readiness with a priced counterfactual to beat) and the nine reruns in the order they pay (2026-10-17).
 - `results/radio_and_backhaul.md`: is 2 Gbps per platform feasible and can the backhaul carry it. Plausible as gross outdoor downlink on a 90–100 kg-class payload with 40–70 beams reusing 20 MHz; out of reach on the costed 40 kg payload; no loaded multi-beam stratospheric aggregate published anywhere. Backhaul link classes, the egress funnel, ring gateways as heads not sites, laser energy, and the fuel cell for short winter flights (2026-10-17).
 - `results/deployable_now.md`: what can be deployed in the next year (a Thunderhead-flown pilot with a Loon-class radio, summer 2027 and winter 2027–28, €10–20 M), the staged upgrade path with a measurable gate per phase, what is useful on day one, how production and participation scaling carry the cost case, what a comparable constellation costs (IRIS², OneWeb, Kuiper, Starlink, direct-to-cell), the competition for low orbit, and Kessler syndrome as the structural argument for a layer that cannot cascade. Reviewed by four seats the same day (2026-10-17).
+
+## Reruns and requests
+
+- `docs/reruns_era5.md`: the runbook for the nine reruns in `results/mitigation_research.md`: what runs now (`fetch_era5.py`, `shear_hist.py`, `outage_scenario.py` with `BALLOON_GBPS`, `jet_test.py` and `forecast_release.py` on ERA5 for 2025, `run_drift.py` per year with `WIND_GRID`), what still needs code, and what each rerun changes (2026-10-17).
+- `docs/rfq_flight_service.md`: the request for information to send to Aerostar and World View for the pilot in `results/deployable_now.md`: configuration, payload mass and power, winter heritage, operations, export control, budgetary price and the upgrade path (2026-10-17).
+- `results/shear_gfs_2025_{djf,jja,am}.csv`: winter, summer and spring directional-shear histograms at 45–55°N from `shear_hist.py` on the 2025 GFS file. Winter: median spread across 150–30 hPa 31°, slowest level 13 m/s eastward 93 % of the time, perfect-controller crossing 2.4 days. Summer: spread 152°, slowest level 2.7 m/s, 12 days.
 
 ## Modelling caveats
 

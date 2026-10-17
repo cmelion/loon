@@ -6,3 +6,4 @@ __pycache__/
 data/ncep_band_2025.npz
 data/ncep_europe_full_2025.npz
 data/ncep_europe_upper_2025.npz
+data/era5_*

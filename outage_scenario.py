@@ -12,13 +12,18 @@ Compared with Starlink's and allied satellites' pro-rata capacity in the zone.
 All demand and capacity inputs are ASSUMPTIONS, set below.
 """
 import math
+import os
 
 import pandas as pd
 
 REGION_KM2 = 10.85e6
 STARLINK_REGION_TBPS = 21.0      # cost_model, Starlink share over the region
 ALLIED_SAT_REGION_TBPS = 2.0     # KONNECT VHTS + other GEO + OneWeb + IRIS² share (~2030)
-BALLOON_GBPS = (1.0, 2.0, 5.0)   # modern 5G phased-array payload, low/mid/high
+# Per-balloon capacity, low/mid/high. The original run used 1, 2, 5 Gbps (a
+# 5G phased array). Rerun 5 of results/mitigation_research.md (W11) asks for
+# Loon-class figures: BALLOON_GBPS=0.04,0.2,0.5. The output file carries the tag.
+BALLOON_GBPS = tuple(float(x) for x in os.environ.get('BALLOON_GBPS', '1,2,5').split(','))
+TAG = os.environ.get('TAG', '' if BALLOON_GBPS == (1.0, 2.0, 5.0) else '_' + '_'.join(f'{g:g}' for g in BALLOON_GBPS))
 PER_FLIGHT_EUR = (6_700, 12_400, 27_200)  # combined_cost.py best/mid/worst
 TRUNK_GBPS = 20.0                # one balloon-to-balloon laser trunk
 DENSITY_PER_KM2 = 120.0          # ~Italy-like population density
@@ -54,7 +59,7 @@ def main():
               allied_sat_tbps=round(ALLIED_SAT_REGION_TBPS * area / REGION_KM2, 3),
               first_cover_h=f'{200 / v:.0f}-{500 / v:.0f}'))
   t = pd.DataFrame(rows)
-  t.to_csv('results/outage_scenario.csv', index=False)
+  t.to_csv(f'results/outage_scenario{TAG}.csv', index=False)
   pd.set_option('display.width', 250)
   mid = t[t.balloon_gbps == BALLOON_GBPS[1]]
   print(mid.drop(columns=['balloon_gbps']).to_string(index=False))

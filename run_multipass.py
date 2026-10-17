@@ -101,7 +101,7 @@ def fly(job):
   from s2sphere import LatLng
   import europe_ble as eb
 
-  grid = fly.grid if hasattr(fly, 'grid') else eb.WindGrid('data/ncep_band_2025.npz')
+  grid = fly.grid if hasattr(fly, 'grid') else eb.WindGrid(os.environ.get('WIND_GRID', 'data/ncep_band_2025.npz'))
   fly.grid = grid
   wf = eb.EuropeWindField(grid, lat0, lon0)
   wf.thrust_v = 0.0
@@ -250,7 +250,8 @@ def fly(job):
 def main():
   quick = '--quick' in sys.argv
   months = (11, 12, 1, 2) if WINTER else range(1, 13)
-  starts = [dt.datetime(2025, m, 1, 6, tzinfo=dt.timezone.utc) for m in months]
+  year = int(os.environ.get('YEAR', eb.T0.year))
+  starts = [dt.datetime(year, m, 1, 6, tzinfo=dt.timezone.utc) for m in months]
   sites = list(LAUNCH.items())
   if os.environ.get('LAUNCH_SET') == 'canada':
     sites = list(CANADA_LAUNCH.items())
