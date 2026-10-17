@@ -1,0 +1,8 @@
+[
+ {"id":"s1","scene":"test","text":"We took Google's Loon simulator, the open-source Balloon Learning Environment, and drove it with a real year of winds over Europe, twenty twenty-five. Three hundred and sixty one-way flights from five launch sites, two a month. These are the tracks."},
+ {"id":"s2","scene":"winter","text":"In January the stratosphere blows the same way at every height a balloon can reach. Flights cross the region in a day or two and are gone. There is nothing to steer with."},
+ {"id":"s3","scene":"summer","text":"By June the winds high up have turned and the band in between goes quiet. The same controller now keeps a balloon over the region for a week or two."},
+ {"id":"s4","scene":"conveyor","text":"So the network doesn't ask balloons to hover. They're launched upwind, cross slowly, and get replaced. Winter needs three to four times the summer launch rate, and that drives most of the cost."},
+ {"id":"s5","scene":"glider","text":"At the end of a flight the radio glides home to one of twenty-one sites. With real winds all the way down, ninety-eight percent of releases make it. The two that don't never came within range of a site."},
+ {"id":"s6","scene":"cost","text":"The catch is timing. On board you only have forecasts, so you release early, and the coverage you give up is the cost. As first costed, three point four billion euros a year. Planned on a five-day forecast, about six point three. That is the number to plan on, and three things are still unproven: the radio's capacity, the thin envelope, and a lighter vehicle the model has never flown."}
+]

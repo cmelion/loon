@@ -1,0 +1,41 @@
+{
+ "segs": [
+  {
+   "id": "s1",
+   "start": 0.8,
+   "dur": 15.12,
+   "text": "We took Google's Loon simulator, the open-source Balloon Learning Environment, and drove it with a real year of winds over Europe, twenty twenty-five. Three hundred and sixty one-way flights from five launch sites, two a month. These are the tracks."
+  },
+  {
+   "id": "s2",
+   "start": 16.62,
+   "dur": 10.32,
+   "text": "In January the stratosphere blows the same way at every height a balloon can reach. Flights cross the region in a day or two and are gone. There is nothing to steer with."
+  },
+  {
+   "id": "s3",
+   "start": 27.64,
+   "dur": 8.96,
+   "text": "By June the winds high up have turned and the band in between goes quiet. The same controller now keeps a balloon over the region for a week or two."
+  },
+  {
+   "id": "s4",
+   "start": 37.3,
+   "dur": 12.08,
+   "text": "So the network doesn't ask balloons to hover. They're launched upwind, cross slowly, and get replaced. Winter needs three to four times the summer launch rate, and that drives most of the cost."
+  },
+  {
+   "id": "s5",
+   "start": 50.08,
+   "dur": 11.76,
+   "text": "At the end of a flight the radio glides home to one of twenty-one sites. With real winds all the way down, ninety-eight percent of releases make it. The two that don't never came within range of a site."
+  },
+  {
+   "id": "s6",
+   "start": 62.54,
+   "dur": 26.52,
+   "text": "The catch is timing. On board you only have forecasts, so you release early, and the coverage you give up is the cost. As first costed, three point four billion euros a year. Planned on a five-day forecast, about six point three. That is the number to plan on, and three things are still unproven: the radio's capacity, the thin envelope, and a lighter vehicle the model has never flown."
+  }
+ ],
+ "total": 92.06
+}

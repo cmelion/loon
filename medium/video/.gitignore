@@ -1,0 +1,7 @@
+node_modules/
+*.wav
+aiden/
+stills/
+fast/
+preview.html
+narration.wav
