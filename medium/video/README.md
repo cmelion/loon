@@ -20,7 +20,7 @@ Map: the same conic-conformal base as the explainers, re-projected with d3-geo a
 
 - No 98 % without the ceiling caveat; no 5.4-day dwell; no "95 % coverage".
 - No capacity, jamming or Starlink comparison.
-- The cost scene states €6.3 B as the planning case, per the issues register, with €3.4 B labelled "as first costed".
+- The cost scene states €6.3 B as the planning case, per the issues register, with €3.4 B labelled "in the first estimate".
 
 ## Hosting on Medium
 

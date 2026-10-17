@@ -85,7 +85,7 @@ One caveat: that release timing used knowledge of the balloon's future path. A v
 
 A redesigned envelope built at fleet volume costs about €1,070 (range €390–2,900), nine times less than today's roughly €10,000.
 
-If the radio is the asset, the envelope is just a fuel tank for lift. We modelled its mass from film and tendon stresses, calibrated to BLE's 68.5 kg envelope for a 92.5 kg payload, then costed it bottom-up (`envelope_cost.py`). The unit costs are engineering assumptions.
+If the radio is the asset, the envelope is just a fuel tank for lift. We modelled its mass from film and tendon stresses, calibrated to BLE's 68.5 kg envelope for a 92.5 kg payload, then estimated it bottom-up (`envelope_cost.py`). The unit costs are engineering assumptions.
 
 Each lever on its own, applied to today's roughly €10,000 envelope:
 

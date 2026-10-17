@@ -106,7 +106,7 @@ Two things are notable by their absence. Envelope reuse plus the recycling credi
 * **L6b** Target 50 % Dec–Mar, 95 % otherwise (random-placement coverage formula as in cost_model.py).
 * **L6c** Served area = populated land (land fraction × populated share) with the targeting efficiency above; gateways scale with served area.
 * **L7** Footprint radius 60–80 km (mode 70) vs 40–50 km; payload cost ×1.1–1.6 for a multi-beam antenna; capacity per balloon unchanged. Minimum elevation 14–18° at the edge, marginal for handset uplink (ASSUMPTION that the link closes).
-* **L8** Coverage target 50 % every month; the backstop layer (direct-to-cell satellite or terrestrial) is assumed to exist and is not costed.
+* **L8** Coverage target 50 % every month; the backstop layer (direct-to-cell satellite or terrestrial) is assumed to exist and is not priced.
 
 ## Notes on `cost_model.py`
 

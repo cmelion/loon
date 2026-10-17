@@ -8,7 +8,7 @@
 
 | Payload class | Mass, power, aperture | Beams at 1.8–2.6 GHz over a 40 km-radius footprint | Gross outdoor downlink | Where the confidence sits |
 |---|---|---|---|---|
-| L: the costed vehicle | 40 kg, 300–600 W, 1.0–1.6 m | 10–25, power-limited, fewer through a winter night on 3 kWh | 0.2–0.6 Gbps | high confidence that 2 Gbps is out of reach |
+| L: the vehicle in the cost estimate | 40 kg, 300–600 W, 1.0–1.6 m | 10–25, power-limited, fewer through a winter night on 3 kWh | 0.2–0.6 Gbps | high confidence that 2 Gbps is out of reach |
 | M: the simulated mass class | 90–100 kg, 0.8–1.5 kW, 1.6–2 m | 40–70 | 1–2.5 Gbps | physics plausible; mass, power, thermal, interference and backhaul not closed; a new payload, not the Loon one |
 | H: aircraft and airship payloads | 150 kg and up, 2–3 kW, 3 m | 100–500 | 5–25 Gbps (Stratospheric Platforms' 500 × 150 Mbps multiplies to 75 Gbps, a product of claims) | physics plausible, flight evidence thin; not a balloon payload this repository flies |
 
