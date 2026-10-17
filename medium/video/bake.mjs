@@ -2,7 +2,7 @@ import * as d3 from "d3-geo"; import fs from "fs";
 const ring=[]; for(let lon=-12;lon<=140;lon+=1) ring.push([lon,20]); for(let lat=20;lat<=76;lat+=1) ring.push([140,lat]); for(let lon=140;lon>=-12;lon-=1) ring.push([lon,76]); for(let lat=76;lat>=20;lat-=1) ring.push([-12,lat]);
 ring.reverse(); const win={type:"Polygon",coordinates:[ring]};
 const proj0=d3.geoConicConformal().parallels([35,65]).rotate([-50,0]).center([0,52]).fitExtent([[20,20],[1580,880]],win);
-const geo=JSON.parse(fs.readFileSync("/Users/charles/Downloads/loon-geo.json"));
+const geo=JSON.parse(fs.readFileSync(new URL("./loon-geo.json", import.meta.url)));  // the corridor map the explainers were drawn from
 const k=proj0([30.5234,50.4501]); const dx=geo.cities.Kyiv[0]-k[0], dy=geo.cities.Kyiv[1]-k[1];
 const P=(lat,lon)=>{const p=proj0([lon,lat]); return [+(p[0]+dx).toFixed(1), +(p[1]+dy).toFixed(1)];};
 // verify translation-only on two more stored cities

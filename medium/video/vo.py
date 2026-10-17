@@ -3,7 +3,7 @@ import json, os, re, subprocess, sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 PY = os.path.expanduser("~/qwen3-tts-env/bin/python")
 MODEL = "mlx-community/Qwen3-TTS-12Hz-1.7B-Base-bf16"
-REF_AUDIO = "/Users/charles/Documents/GitHub/fde-sample-campaign/docs/audio/voice-ref_0.wav"
+REF_AUDIO = os.environ.get("REF_AUDIO", "voice-ref.wav")  # a few seconds of reference speech for the TTS voice; not included, supply your own
 REF_TEXT = "This is a BDD demo showing how we use Claude Code Skills to build Chiron-based training from scratch."
 CHUNK_WORDS, MIN_WPS, CHUNK_GAP = 45, 1.9, 0.28
 STAKES = "Serious and measured. Slightly slower on key contrasts. Weight on the consequences."

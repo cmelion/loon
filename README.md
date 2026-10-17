@@ -78,3 +78,7 @@ Regenerate with `fetch.py` (throttled for the free tier, ~40 min).
   wind tapered to 30% at the surface.
 - Controllers are simple heuristics (BLE's StationSeeker, slow-wind and
   steer-to-centre), not a trained agent.
+
+## Licence and status
+
+Code is MIT (see `LICENSE`). The research notes in `results/`, the Medium material in `medium/` and the video are CC BY 4.0: reuse with attribution to Charles Fulnecky and a link here. Every number in the notes is provisional in the way each note states; the weakness register and the mitigation note list what is unproven, and the runbook lists the reruns in progress. Wind data: GFS via Open-Meteo (CC BY 4.0); NCEP/NCAR Reanalysis-1 and ERA5 under their own terms, not redistributed here except the GFS subset.
