@@ -83,6 +83,12 @@ class BatchGrid:
     self.lats, self.lons = grid.lats, grid.lons
     self.logp = grid.logp  # decreasing
     self.nt = grid.nt
+    self.dt_h = getattr(grid, 'dt_h', 1.0)
+    # Pressure range the grid covers; below p_max (higher pressure) the old
+    # taper applies, so a full-column grid (to 1000 hPa) uses real winds.
+    self.p_min = float(np.exp(self.logp.min()))
+    self.p_max = float(np.exp(self.logp.max()))
+    self.alt_pmax = float(isa_altitude(np.array(self.p_max)))
     assert not getattr(grid, 'ring', False)
 
   @staticmethod
@@ -97,7 +103,7 @@ class BatchGrid:
     ia, wa = self._idx(self.lats, lat)
     ib, wb = self._idx(self.lons, lon)
     ip, wp = self._idx(self.logp, np.log(p))
-    h = np.clip(hours, 0, self.nt - 1.001)
+    h = np.clip(hours / self.dt_h, 0, self.nt - 1.001)
     it = h.astype(int)
     wt = h - it
     out = []
@@ -151,8 +157,9 @@ def glide_batch(bg, lat, lon, pa, hours, tlat, tlon, *, ld, sink_sl,
     sink = sink_sl * np.sqrt(RHO_SL / rho)
     tas = ld * sink
     p = isa_pressure(np.maximum(alt, 0.0))
-    wu, wv = bg.lookup(lat, lon, np.clip(p, P_MIN, P_MAX), hours + t / 3600.0)
-    k = np.where(p > P_MAX, taper + (1.0 - taper) * np.maximum(alt, 0.0) / ALT_150, 1.0)
+    wu, wv = bg.lookup(lat, lon, np.clip(p, bg.p_min, bg.p_max), hours + t / 3600.0)
+    k = np.where(p > bg.p_max,
+                 taper + (1.0 - taper) * np.maximum(alt, 0.0) / bg.alt_pmax, 1.0)
     wu = k * wu + bias_u + nu
     wv = k * wv + bias_v + nv
     if noise_sd > 0:

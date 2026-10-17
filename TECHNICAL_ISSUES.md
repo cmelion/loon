@@ -38,17 +38,29 @@ Stratospheric trajectory forecasts are usable for roughly 5–7 days, so the
   balloon conveyor, or catcher drones that meet gliders mid-descent, so release
   timing never costs coverage.
 
-## 2. Descent winds below 13.6 km are missing (A3) — not yet measured
+## 2. Descent winds below 13.6 km (A3) — measured, recovery holds
 
-The glider and parachute runs taper the 150 hPa wind to 30% at the surface. The
-real 8–12 km winter jet is often faster than the air above it. The 98% recovery
-is an upper bound until full-column winds (1000–30 hPa) are flown.
+The original runs tapered the 150 hPa wind to the surface. `jet_test.py`
+re-flew all 120 releases with NOAA NCEP/NCAR Reanalysis-1 winds at every level
+from 1000 to 30 hPa (2.5°, 6-hourly), against the same NOAA data tapered as
+before, with the same Monte Carlo:
 
-- **Real-world fix:** fetch full-column winds along the 120 tracks and rerun
-  `glide_tuning.py` (planned).
-- **Fiction lever:** gliders that ride the jet instead of fighting it (descend
-  early downwind, recover far east), or recovery sites placed under the jet's
-  usual exit.
+| Design | Tapered winds | Real full column | Full column, low winds ×1.3 | ×1.6 |
+| --- | --- | --- | --- | --- |
+| L/D 14 at 20 kg/m² (article) | 97.8% | 98.3% | 98.2% | 98.0% |
+| L/D 18 at 45 kg/m² (held-out winner) | 98.2% | 98.3% | 98.3% | 98.3% |
+
+(5-day forecast release, 100 km margin; 98.3% is the ceiling set by two flights
+that never come within reach of a site.) The release rule keeps a 100 km
+margin, so the glider arrives over its site with height to spare and the jet
+mostly drifts it during the final spiral. Caveats: the reanalysis smooths jet
+cores (hence the ×1.3/×1.6 stress), and the full-column runs drop the random
+taper term, so part of the small gain is one fewer uncertainty source. A
+0.25° check (ERA5) would close it.
+
+- **Real-world fix:** adopt the heavier design; keep the 100 km margin.
+- **Fiction lever:** none needed for recovery. A jet still makes good drama for a
+  glider forced to release early with a thin margin.
 
 ## 3. The glider design was tuned on its own test flights (A13) — measured
 
