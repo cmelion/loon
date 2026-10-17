@@ -41,6 +41,7 @@ MAX_DAYS = 30
 STEP_MIN = 3
 DECIDE_EVERY = 5  # steps (15 min)
 PLAN_EVERY = 40  # steps (2 h) for the lookahead planner
+APPROACH_HOME = os.environ.get('APPROACH_HOME') == '1'
 SEED_C = {'passive': 0, 'slow': 1, 'home': 2, 'plan': 1}  # plan pairs with slow
 
 
@@ -112,6 +113,9 @@ def fly(job):
   target, steps, end = None, 0, 'MAX_DAYS'
   path_km, prev = 0.0, (lat0, lon0)
   release = None  # (steps, lat, lon, pressure, date_time, site)
+  # Ship launches start outside the region: count only time inside it, and
+  # end when the balloon leaves after entering (or never arrives in 5 days).
+  entered, in_steps = in_region(lat0, lon0), 0
   max_steps = MAX_DAYS * 24 * 60 // STEP_MIN
   while steps < max_steps:
     s = arena.get_balloon_state()
@@ -133,7 +137,9 @@ def fly(job):
     else:
       if steps % DECIDE_EVERY == 0:
         pr = pressure_range_builder.get_pressure_range(s, arena._atmosphere)
-        target = choose_pressure(kind, wf, s, pr, target)
+        # Not yet over the region (ship launch): head for it, then slow down.
+        mode = kind if entered or not APPROACH_HOME else 'home'
+        target = choose_pressure(mode, wf, s, pr, target)
       if s.pressure > target + 300:
         action = control.AltitudeControlCommand.UP
       elif s.pressure < target - 300:
@@ -156,13 +162,20 @@ def fly(job):
       name, site_ll = min(RECOVERY.items(), key=lambda kv: gc_km((lat, lon), kv[1]))
       if gc_km((lat, lon), site_ll) <= RELEASE_KM:
         release = (steps, lat, lon, s.pressure, s.date_time, name)
-    if not in_region(lat, lon):
+    if in_region(lat, lon):
+      entered = True
+      in_steps += 1
+    elif not entered:
+      if steps >= 5 * 480:
+        end = 'NEVER_ENTERED'
+        break
+    else:
       end = 'EXIT_' + ('W' if lon < REGION['lon0'] else 'E' if lon > REGION['lon1']
                        else 'S' if lat < REGION['lat0'] else 'N')
       break
   s = arena.get_balloon_state()
   lat, lon = s.latlng.lat().degrees, s.latlng.lng().degrees
-  dwell_h = steps * STEP_MIN / 60
+  dwell_h = in_steps * STEP_MIN / 60
   row = dict(site=site, start=start.date().isoformat(), month=start.month,
              controller=kind, seed=seed, dwell_h=round(dwell_h, 2), end=end,
              end_lat=round(lat, 2), end_lon=round(lon, 2),

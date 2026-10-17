@@ -26,13 +26,26 @@ EARTH_KM = 6371.0
 
 
 class WindGrid:
-  """Gridded u/v [lat, lon, level, hour] with vectorised trilinear lookup."""
+  """Gridded u/v [lat, lon, level, t] with vectorised trilinear lookup.
+
+  Optional npz keys: dt_h (hours per time step, default 1) and ring (lons
+  form a full 360° ring: longitudes wrap and time wraps around the year, so
+  flights running into 2026 reuse early-2025 winds).
+  """
 
   def __init__(self, path='data/gfs_europe_2025.npz'):
     d = np.load(path)
     self.u, self.v = d['u'], d['v']
     self.lats, self.lons = d['lats'], d['lons']
     self.logp = np.log(d['levels_hpa'] * 100.0)  # Pa, decreasing
+    self.dt_h = float(d['dt_h']) if 'dt_h' in d else 1.0
+    self.ring = bool(d['ring']) if 'ring' in d else False
+    if self.ring:  # close the ring and the year so interpolation wraps
+      self.u = np.concatenate([self.u, self.u[:, :1]], axis=1)
+      self.v = np.concatenate([self.v, self.v[:, :1]], axis=1)
+      self.u = np.concatenate([self.u, self.u[..., :1]], axis=3)
+      self.v = np.concatenate([self.v, self.v[..., :1]], axis=3)
+      self.lons = np.append(self.lons, self.lons[0] + 360.0)
     self.nt = self.u.shape[-1]
 
   @staticmethod
@@ -47,9 +60,12 @@ class WindGrid:
   def lookup(self, lat, lon, pressures, hours):
     pressures = np.atleast_1d(pressures)
     ia, wa = self._idx(self.lats, lat)
+    if self.ring:
+      lon = self.lons[0] + (lon - self.lons[0]) % 360.0
     ib, wb = self._idx(self.lons, lon)
     ip, wp = self._idx(self.logp, np.log(pressures))
-    h = np.clip(hours, 0, self.nt - 1.001)
+    h = hours / self.dt_h
+    h = h % (self.nt - 1) if self.ring else np.clip(h, 0, self.nt - 1.001)
     it, wt = int(h), h - int(h)
     out = []
     for g in (self.u, self.v):

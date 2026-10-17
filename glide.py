@@ -187,3 +187,94 @@ def simulate_descent(lat, lon, pressure_pa, hours, grid, *, sink_sl=5.0,
     alt -= sink * step
     t += step
   return dict(duration_s=t, end_lat=lat, end_lon=lon)
+
+
+# ---------------------------------------------------------------------------
+# Wind-correcting guidance (added for glider_tuning; simulate_glide unchanged)
+# ---------------------------------------------------------------------------
+def crab_heading(track_rad, tas, wu, wv):
+  """Heading (rad) that keeps the ground track on bearing track_rad.
+
+  Solves tas*sin(heading - track) = -(cross-wind component). If the cross
+  wind exceeds the airspeed the track cannot be held and the heading falls
+  back to the track bearing itself (max closing speed on the target).
+  Returns (heading_rad, held) where held is False for the fallback.
+  """
+  w_cross = wu * math.cos(track_rad) - wv * math.sin(track_rad)  # +ve to right
+  s = -w_cross / tas if tas > 0 else 2.0
+  if abs(s) <= 1.0:
+    return track_rad + math.asin(s), True
+  return track_rad, False
+
+
+def speed_to_fly_ratio(headwind_ratio, max_ratio=1.8):
+  """V/V_bestglide that maximises ground L/D against headwind h = hw/V_bg.
+
+  Polar: sink(V) = sink_bg/2 * ((V/V_bg)^3 + V_bg/V) (parabolic drag, best
+  glide at V_bg). Never slower than V_bg (tailwind case uses best glide).
+  """
+  xs = np.linspace(1.0, max_ratio, 81)
+  g = (xs - headwind_ratio) * xs / (xs ** 4 + 1.0)
+  return float(xs[int(np.argmax(g))])
+
+
+def simulate_glide_guided(lat, lon, pressure_pa, hours, grid, target, *,
+                          ld=12.0, sink_sl=1.0, dt_s=10.0, guidance='crab',
+                          stf=False, bias=(0.0, 0.0), taper=0.3,
+                          arrive_km=3.0, hold=True):
+  """Like simulate_glide but with wind-correcting guidance and perturbations.
+
+  guidance: 'crab' holds the great-circle track to the target; 'direct'
+  reproduces simulate_glide's point-at-target behaviour. stf: fly faster
+  than best glide into headwinds. bias: constant (u, v) wind error added
+  to the grid wind (m/s). taper: surface wind fraction of the 150 hPa wind
+  (simulate_glide uses 0.3). Once within arrive_km of the target the glider
+  holds station overhead (hold=True) and spirals down; the altitude at that
+  moment is the arrival margin. Returns a dict incl. margin_km =
+  arrival altitude * L/D (still-air range in hand) or -miss distance.
+  """
+  alt = isa_altitude(pressure_pa)
+  start_alt = alt
+  t, dist_km, arr_alt, held_all = 0.0, 0.0, None, True
+  tlat, tlon = target
+  while alt > 0.0:
+    rho = isa_density(alt)
+    sink = sink_sl * math.sqrt(RHO_SL / rho)
+    tas = ld * sink
+    p = isa_pressure(alt)
+    if p <= P_MAX:
+      u, v = grid.lookup(lat, lon, np.array([max(p, P_MIN)]), hours + t / 3600.0)
+      wu, wv = float(u[0]), float(v[0])
+    else:
+      u, v = grid.lookup(lat, lon, np.array([P_MAX]), hours + t / 3600.0)
+      k = taper + (1.0 - taper) * max(alt, 0.0) / ALT_150
+      wu, wv = k * float(u[0]), k * float(v[0])
+    wu, wv = wu + bias[0], wv + bias[1]
+    d = haversine_km(lat, lon, tlat, tlon)
+    b = bearing_rad(lat, lon, tlat, tlon)
+    if stf:
+      hw = -(wu * math.sin(b) + wv * math.cos(b)) / tas
+      x = speed_to_fly_ratio(hw)
+      sink, tas = sink * 0.5 * (x ** 3 + 1.0 / x), tas * x
+    if guidance == 'crab':
+      hdg, ok = crab_heading(b, tas, wu, wv)
+      held_all &= ok
+    else:
+      hdg = b
+    gu, gv = tas * math.sin(hdg) + wu, tas * math.cos(hdg) + wv
+    if arr_alt is None and d < arrive_km:
+      arr_alt = alt
+    if hold and arr_alt is not None:
+      gu = gv = 0.0
+    step = min(dt_s, alt / sink)
+    lat += math.degrees(gv * step / (EARTH_KM * 1000.0))
+    lon += math.degrees(gu * step / (EARTH_KM * 1000.0 * math.cos(math.radians(lat))))
+    dist_km += math.hypot(gu, gv) * step / 1000.0
+    alt -= sink * step
+    t += step
+  d1 = haversine_km(lat, lon, tlat, tlon)
+  return dict(duration_s=t, start_alt_m=start_alt, end_lat=lat, end_lon=lon,
+              ground_dist_km=dist_km, dist_to_target_end_km=d1,
+              arrival_alt_m=arr_alt, track_held=held_all,
+              margin_km=(arr_alt * ld / 1000.0 if arr_alt is not None else -d1),
+              reached=d1 < REACH_KM)

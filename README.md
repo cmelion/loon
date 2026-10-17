@@ -17,6 +17,10 @@ Black Sea.
 | Cost vs satellite systems | `cost_model.py` → `results/cost_comparison.md` | ~€15.5 B/yr (€10.6–22.1 B) for ~95% year-round coverage, ~53× Starlink's attributable cost per km². Envelope and payload costs dominate; hydrogen is ~0.3%. |
 | Cost reduction levers | `cost_reduction.py` → `results/cost_reduction.md` | Engineering levers (envelope cost at volume, 94% payload recovery, 60–80 km footprint) cut the 95% year-round fleet to ~€4.2 B/yr, ~15× Starlink. Only a thinner hybrid service (50% coverage with satellite backstop, winter 50%, populated land) reaches ~4.6×. |
 | Forecast-lookahead controller | `planner.py`, `run_drift.py --controllers plan` | Paired with the slow controller: fewer very short flights but no change in mean dwell (Little's law: launches ∝ 1/mean dwell), so no cost saving; winter unchanged. |
+| Glider return tuning (Fable) | `glide_tuning.py` → `results/glider_tuning.md` | Speed-to-fly guidance + release at last hour a site is reachable with 100 km margin; L/D 14 @ 20 kg/m² recovers 98.0% under wind-error Monte Carlo (vs 64% today). Ceiling 98.3%: add a west-Ireland/Brittany site. |
+| Multi-pass hemispheric flights | `run_multipass.py`, `analyze_multipass.py` (NOAA band winds) | Median 85-day flights, 2.5 laps, 4 Europe passes → launches ×0.42–0.62. But ~22% of time over Russia/C.Asia/China; China avoidance via a northern corridor fails (all flights still cross, more power failures) → launches ×0.60–0.77. |
+| Ship vs land launch | `run_ship.py` | With a run-for-Europe approach rule, Atlantic ship launches match the best land sites (~3.1 d rotating, 13% never arrive) but don't beat them; choosing the best site per date (mobile launch) gives ×1.6–1.75 dwell with hindsight. |
+| Combined per-flight cost | `combined_cost.py` | Lighter hardware + learning curve + 98% glider recovery + gig pickup + launch-site choice: ~€12k/flight (€7–27k), fleet ~€3.8 B/yr ≈ 13× Starlink; with 60–80 km footprint ~6× (2.7–20×). |
 
 Charts and per-flight CSVs are in `results/`.
 
@@ -36,6 +40,8 @@ The full drift sweep takes ~7 min on 8 cores; the station-keeping sweep ~3.3 h.
 on a 2.5° × 5° grid (32.5–65°N, 15°W–50°E), from the
 [Open-Meteo](https://open-meteo.com/) historical forecast API (CC BY 4.0).
 Regenerate with `fetch.py` (throttled for the free tier, ~40 min).
+
+`data/ncep_band_2025.npz` (not committed, 72 MB): NCEP/NCAR Reanalysis-1 2025 winds, 25–70°N, all longitudes, 6-hourly, from NOAA PSL. Download `uwnd.2025.nc` and `vwnd.2025.nc` from https://downloads.psl.noaa.gov/Datasets/ncep.reanalysis/pressure/ and run `python subset_ncep.py <dir>`.
 
 ## Modelling caveats
 
