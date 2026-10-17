@@ -1,0 +1,129 @@
+{
+ "script": "scenarios/tools/outage_case.py (outage_scenario.py formulas/constants)",
+ "zone": "Iberia (Spain+Portugal mainland)",
+ "pop_m": 58.0,
+ "radius_km": 430.0,
+ "area_km2": 580880,
+ "months": [
+  4,
+  5
+ ],
+ "drift_speed_kmh": 14.2,
+ "monthly_median_speed_kmh": {
+  "1": 41.6,
+  "2": 52.3,
+  "3": 64.6,
+  "4": 11.8,
+  "5": 16.5,
+  "6": 13.2,
+  "7": 11.1,
+  "8": 17.3,
+  "9": 17.0,
+  "10": 30.6,
+  "11": 43.6,
+  "12": 36.6
+ },
+ "crossing_h": 60.8,
+ "first_cover_h": [
+  14,
+  35
+ ],
+ "min_balloons_one_per_cell": 116,
+ "starlink_tbps_pro_rata": 1.12,
+ "allied_sat_tbps_pro_rata": 0.107,
+ "per_flight_eur": [
+  6700,
+  12400,
+  27200
+ ],
+ "service_defs": {
+  "basic (voice/text)": [
+   0.15,
+   0.1
+  ],
+  "degraded data": [
+   0.05,
+   1.0
+  ]
+ },
+ "rows": [
+  {
+   "service": "basic (voice/text)",
+   "balloon_gbps": 1.0,
+   "demand_tbps": 0.87,
+   "balloons": 870,
+   "launches_day": 344,
+   "cost_m_eur_day": 4.26,
+   "cost_range_m_eur_day": [
+    2.3,
+    9.3
+   ],
+   "edge_trunks": 44
+  },
+  {
+   "service": "basic (voice/text)",
+   "balloon_gbps": 2.0,
+   "demand_tbps": 0.87,
+   "balloons": 435,
+   "launches_day": 172,
+   "cost_m_eur_day": 2.13,
+   "cost_range_m_eur_day": [
+    1.2,
+    4.7
+   ],
+   "edge_trunks": 44
+  },
+  {
+   "service": "basic (voice/text)",
+   "balloon_gbps": 5.0,
+   "demand_tbps": 0.87,
+   "balloons": 174,
+   "launches_day": 69,
+   "cost_m_eur_day": 0.85,
+   "cost_range_m_eur_day": [
+    0.5,
+    1.9
+   ],
+   "edge_trunks": 44
+  },
+  {
+   "service": "degraded data",
+   "balloon_gbps": 1.0,
+   "demand_tbps": 2.9,
+   "balloons": 2900,
+   "launches_day": 1145,
+   "cost_m_eur_day": 14.2,
+   "cost_range_m_eur_day": [
+    7.7,
+    31.1
+   ],
+   "edge_trunks": 145
+  },
+  {
+   "service": "degraded data",
+   "balloon_gbps": 2.0,
+   "demand_tbps": 2.9,
+   "balloons": 1450,
+   "launches_day": 573,
+   "cost_m_eur_day": 7.1,
+   "cost_range_m_eur_day": [
+    3.8,
+    15.6
+   ],
+   "edge_trunks": 145
+  },
+  {
+   "service": "degraded data",
+   "balloon_gbps": 5.0,
+   "demand_tbps": 2.9,
+   "balloons": 580,
+   "launches_day": 229,
+   "cost_m_eur_day": 2.84,
+   "cost_range_m_eur_day": [
+    1.5,
+    6.2
+   ],
+   "edge_trunks": 145
+  }
+ ]
+}

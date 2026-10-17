@@ -1,0 +1,631 @@
+<h1 id="a-connectivity-layer-no-one-can-switch-off">A Connectivity Layer
+No One Can Switch Off</h1>
+<p><em>We flew 1,600 simulated balloons through a year of real
+stratospheric winds. The result: Europe and Canada could run their own
+phone-direct connectivity layer for about €3.4 billion a year, with no
+rockets, no dishes and no foreign off-switch. Here is what works, what
+it costs, and what is still unproven.</em></p>
+<p>Europe relies on one foreign company for most of its satellite
+broadband. Its ground networks can fail across whole countries. On its
+eastern flank, radio links are jammed as a matter of routine. This
+article tests one answer: a fleet of steerable balloons at about 20 km
+that phones connect to directly, launched from ships and depots, whose
+radios glide home after every flight.</p>
+<p>Every number below comes from a simulation we ran, a physics
+calculation, or a cited figure. Where a number is an engineering
+estimate or assumption, it says so. The simulation code and results live
+in a private repository; the scripts named below are available on
+request.</p>
+<h2 id="three-single-points-of-failure">Three single points of
+failure</h2>
+<p>Europe’s connectivity can fail in three ways at once, and the current
+fallbacks share the weaknesses.</p>
+<ul>
+<li><strong>One foreign operator.</strong> Satellite broadband over
+Europe is dominated by Starlink. Its limits on use in Ukraine were
+widely reported, and on 24 July 2025 an internal software failure took
+the whole network down for about two and a half hours. A government
+can’t base its resilience on a service someone else can switch off.</li>
+<li><strong>Ground networks fail together.</strong> In the Iberian
+blackout of 28 April 2025, more than half of mobile users across large
+areas of Spain and Portugal lost service within hours as cell-site
+batteries ran down. One operator’s customers were offline for over a
+day. War, sabotage, cyberattack or a severe storm can do the same to a
+region the size of a country.</li>
+<li><strong>Contested spectrum.</strong> Satellite-navigation jamming
+around Kaliningrad and over the Black Sea is now routine. Signals that
+come down from orbit arrive weak, which makes them easy to swamp.</li>
+</ul>
+<p>A new layer has to answer all three. It must be under allied control,
+independent of the ground grid, and hard to jam.</p>
+<h2 id="how-we-tested-it">How we tested it</h2>
+<p>We flew more than 1,600 simulated balloons through a real year of
+winds, using the physics engine behind Project Loon.</p>
+<ul>
+<li><strong>Simulator:</strong> Google’s open-source <a
+href="https://github.com/google/balloon-learning-environment">Balloon
+Learning Environment</a> (BLE), version 1.0.1. It models a Loon-class
+superpressure balloon: 68.5 kg envelope, 92.5 kg payload, 3.06 kWh
+battery and six 210 W solar panels. An air pump changes altitude.</li>
+<li><strong>Winds, Europe:</strong> hourly GFS winds for all of 2025 at
+150, 100, 70, 50 and 30 hPa, from the <a
+href="https://open-meteo.com/">Open-Meteo</a> archive. The grid is 2.5°
+× 5°, from 32.5–65°N and 15°W–50°E. These replace BLE’s synthetic
+tropical winds.</li>
+<li><strong>Winds, hemisphere:</strong> NOAA’s <a
+href="https://psl.noaa.gov/data/gridded/data.ncep.reanalysis.html">NCEP/NCAR
+Reanalysis-1</a> for 2025, 25–70°N, every longitude, every six hours.
+Used for flights that loop the hemisphere.</li>
+<li><strong>Experiments:</strong>
+<ul>
+<li>528 station-keeping flights at 22 sites</li>
+<li>360 one-way crossings with three controllers</li>
+<li>120 runs of a forecast-lookahead planner</li>
+<li>360 ship versus land launches</li>
+<li>276 hemispheric flights with fuel-cell and propulsion options</li>
+<li>27,480 candidate glider releases, each tested 40 times against wind
+errors</li>
+</ul></li>
+</ul>
+<p>Two limits of the setup matter. There is no wind data below 13.6 km,
+so glider and parachute descents taper the 150 hPa wind to 30 % at the
+surface. BLE’s solar model rejects latitudes at or above 60°, so the
+study region stops at 59.5°N.</p>
+<h2 id="finding-1-balloons-cant-hover-over-europe">Finding 1: balloons
+can’t hover over Europe</h2>
+<p>Over Europe, a balloon stayed within 50 km of its target only 4 % of
+the time. The same controller managed 38 % in BLE’s tropical setup,
+where Loon operated.</p>
+<p>We flew 528 two-day flights at 22 sites from Lisbon to Trabzon, two
+per month through 2025, with BLE’s StationSeeker controller
+(<code>run_coverage.py</code>). The baseline was 16 two-day flights in
+stock BLE (<code>baseline.py</code>).</p>
+<p>The cause is physical. In winter the westerlies at 50–140 hPa blow
+the same way at every altitude a balloon can reach. At 50°N in January,
+the mean eastward wind ran from about 18 m/s at 150 hPa to 32 m/s at 30
+hPa. Changing altitude gives nothing to steer with. Only in summer, when
+winds high up reverse (−2.8 m/s at 50 hPa in July), does station-keeping
+briefly work. The best month-site pairs (Paris in August, Rome in April,
+Bucharest in July) reached 33–37 %.</p>
+<p>So the network doesn’t ask balloons to hover. They work like a
+conveyor: launched upwind, crossing slowly, replaced continuously.</p>
+<h2 id="finding-2-slow-down-and-launch-from-the-right-place">Finding 2:
+slow down, and launch from the right place</h2>
+<p>Steering for the slowest wind kept a balloon over the region for 5.4
+days on average, against 3.2 days for one that simply drifts.</p>
+<p>Every 15 minutes the controller picks the reachable altitude with the
+lowest forecast wind speed (<code>run_drift.py</code>). We flew it, a
+passive drifter and a steer-to-centre controller from five launch sites
+on the 1st and 15th of every month.</p>
+<p>[CHART: dwell-by-month]</p>
+<p><em>Days over the region per flight, by launch month and controller.
+360 one-way flights from Lisbon, Brest, Dublin, Vienna and Bucharest,
+2025 GFS winds.</em></p>
+<p>Winter is the hard season. From January to March every controller
+managed only 1.3–1.9 days, because there is no slow altitude to find;
+December was 2–3 days.</p>
+<p>Launch position matters almost as much as steering. The best site
+changes with the season: Brest or Dublin most months, Vienna in April,
+Bucharest in June and July, Lisbon in September. Picking the best of the
+five sites for each launch date raised the launch-rate-weighted dwell
+(the figure that sets how many launches a day you need) from 3.65 to 6.4
+days, a factor of about 1.75. That uses hindsight, so a forecast-based
+choice will capture part of it. It is the case for mobile and ship
+launchers.</p>
+<p>Ships, with a rule that runs for Europe at full speed before slowing
+down, roughly matched the land sites (3.1 versus 3.3 days in that
+comparison) but did not beat them. And 13 % of ship launches never
+reached the region (<code>run_ship.py</code>). Their value is logistics:
+they can make hydrogen from seawater, avoid moving it by road, and
+recover radios and envelopes at sea.</p>
+<h2 id="finding-3-the-radio-glides-home">Finding 3: the radio glides
+home</h2>
+<p>A tuned glider brings 98.0 % of radios back to a recovery site under
+realistic wind errors (10th–90th percentile: 97.5–98.3 %). Our first
+design managed 64 %.</p>
+<p>The radio is the expensive part, so this is the technology the
+economics rest on. At the end of a flight the payload drops away on a
+small autonomous glider that flies to one of 21 recovery sites. We
+re-flew all 120 slow-controller flights hour by hour and tested 27,480
+candidate releases (<code>glide_tuning.py</code>). Each release was run
+40 times with a random wind bias of up to 5 m/s, gusts, and an unknown
+low-altitude wind taper of 0.1–1.0.</p>
+<ul>
+<li><strong>First design</strong> (glide ratio 12, 16 kg/m², aim
+straight at the site, release at a fixed 150 km): 64 % recovered under
+wind errors, 78 % in perfect winds; about 2.1 h descent.</li>
+<li><strong>Heavier wing</strong> (glide ratio 12, 29 kg/m²): 94 % in
+perfect winds; 1.6 h descent.</li>
+<li><strong>Recommended</strong> (glide ratio 14, 20 kg/m², speed-to-fly
+guidance, reachability release): <strong>98.0 %</strong> under wind
+errors; 2.1 h descent.</li>
+</ul>
+<p>Three changes made the difference:</p>
+<ul>
+<li><strong>A faster wing.</strong> At 20 kg/m² the glider flies about
+75 m/s through the thin air at 20 km, enough to push into
+headwinds.</li>
+<li><strong>Speed-to-fly guidance.</strong> Flying up to 1.8 times
+faster than best-glide speed into headwinds was worth more than 8
+points. Steering into the wind to hold the course added almost
+nothing.</li>
+<li><strong>A reachability release rule.</strong> Every hour the balloon
+simulates the glide to every site within 500 km. It releases at the last
+hour any site is reachable with a 100 km margin. Larger margins bought
+nothing.</li>
+</ul>
+<p>It lands at 15–20 m/s with flaps, so it needs no parachute. The
+ceiling is 98.3 %: two Brest launches exit west over the Atlantic and
+never come within reach of a site. A recovery site in west Ireland,
+Cornwall or Brittany, or a ship, fixes them.</p>
+<p>One caveat: that release timing used knowledge of the balloon’s
+future path. A version using only forecasts recovers 98.1–98.2 % but
+gives up 77–98 hours of coverage per flight instead of about 35.</p>
+<h2 id="finding-4-the-envelope-becomes-a-cheap-consumable">Finding 4:
+the envelope becomes a cheap consumable</h2>
+<p>A redesigned envelope built at fleet volume costs about €1,070 (range
+€390–2,900), nine times less than today’s roughly €10,000.</p>
+<p>If the radio is the asset, the envelope is just a fuel tank for lift.
+We modelled its mass from film and tendon stresses, calibrated to BLE’s
+68.5 kg envelope for a 92.5 kg payload, then costed it bottom-up
+(<code>envelope_cost.py</code>). The unit costs are engineering
+assumptions.</p>
+<p>Each lever on its own, applied to today’s roughly €10,000
+envelope:</p>
+<ul>
+<li>Automated line at about 400,000 a year, same design: −70 % (€10k →
+about €3k).</li>
+<li>Lower internal pressure (1,000 Pa instead of 2,380) with 25–30 µm
+film: −37 %.</li>
+<li>Lighter payload, 92.5 → 40 kg: −26 %.</li>
+<li>Recovery and recycling credit: about −8 %.</li>
+<li><strong>All stacked: about €1,070 per envelope</strong> (range
+€390–2,900).</li>
+</ul>
+<p>The key lever is pressure, not plastic. Tendon and film loads scale
+with internal pressure, so cutting it from 2,380 to 1,000 Pa allows much
+thinner film. For a 40 kg payload the envelope shrinks to 16–18 kg,
+against 68.5 kg today. A 30-day envelope costs only about 15 % more than
+a 4-day one.</p>
+<p>At that price the film itself is only 4 % of cost. What remains is
+part count: fittings 23 %, labour and seams 28 %, supplier margin 17 %.
+Fewer gores and moulded fittings are the next targets. The open question
+is reliability: proving that 25–30 µm film holds 1,000 Pa for days to
+weeks, at that volume.</p>
+<h2 id="finding-5-about-11000-a-flight-3.4-billion-a-year">Finding 5:
+about €11,000 a flight, €3.4 billion a year</h2>
+<p>Once the radio comes home and the envelope is cheap, a flight costs
+about €11,100 instead of €37,100.</p>
+<p>[CHART: per-flight-bridge]</p>
+<p><em>Cost per flight, baseline €37,100 to redesigned €11,100, by line
+item (<code>combined_cost.py</code> mid case; unit costs are engineering
+assumptions).</em></p>
+<p>The payload line falls because 98 % of radios now return. Each lasts
+about 15 flights, refurbished at 10 % of its cost each time. It is also
+lighter and built from commodity 5G parts, assumed at 70 % of today’s
+€35,000 unit. Recovery pickups halve when run like a gig network, the
+way scooter companies collect their scooters. Launch, hydrogen (€127 a
+flight), ground network and regulatory costs stay at €1,870.</p>
+<p>At fleet level, keeping about 95 % of the region covered all year
+costs about <strong>€3.4 billion a year (range €1.5–9.2
+billion)</strong>, down from €15.4 billion in the baseline model. That
+includes choosing the launch site from the forecast, assumed to lengthen
+flights by ×1.35 (×1.15–1.6). That is well under the ×1.75 measured with
+hindsight.</p>
+<h2
+id="finding-6-looping-the-hemisphere-halves-launches-but-most-flights-cross-china">Finding
+6: looping the hemisphere halves launches, but most flights cross
+China</h2>
+<p>With a fuel cell and a small propeller, balloons that ride the
+westerlies around the hemisphere need only 30–49 % as many launches as
+one-way crossings. But 88 % of them still clipped Chinese airspace.</p>
+<p>We flew 60 flights per configuration for up to 150 days on NOAA’s
+hemispheric winds, launched from the five European sites on the 1st of
+each month (<code>run_multipass.py</code>). Flights steer slow over
+Europe and fast eastward elsewhere. They try to stay between 35°N and
+56°N, using a northern corridor around China.</p>
+<p>Launches needed, as a fraction of the one-way fleet, for 30 / 60 /
+100-day envelopes:</p>
+<ul>
+<li><strong>Altitude steering only</strong> (3 kWh battery): 0.77 / 0.68
+/ 0.62. Every flight entered Chinese airspace; 7.4 % of flight time was
+over China.</li>
+<li><strong>Plus a fuel-cell power store</strong> (10 kWh): 0.53 / 0.41
+/ 0.32. Every flight still entered China (6.0 % of time); median peak
+latitude 82.6°N.</li>
+<li><strong>Plus a 3 m/s latitude-holding propeller</strong>: 0.49 /
+0.37 / 0.30. 88 % of flights entered China, for 2.1 % of time; median
+peak latitude 78.8°N.</li>
+</ul>
+<p>The best configuration’s median flight lasted 133 days, made about
+three laps and passed over Europe five times. Propulsion cost about 52
+kWh per 30 days, roughly 3 kg of hydrogen, so long flights need a gas
+budget.</p>
+<p>Two problems remain. North–south winds near the polar vortex reach
+10–20 m/s and overpower a 3 m/s push, so most flights still wandered
+toward the Arctic, where polar night drains power. And under Article 8
+of the <a
+href="https://en.wikisource.org/wiki/Convention_on_International_Civil_Aviation">Chicago
+Convention</a>, pilotless aircraft need each state’s authorisation to
+overfly it. States do shoot balloons down. The United States downed a
+Chinese surveillance balloon off South Carolina in February 2023. In
+September 1995 a Belarusian helicopter shot down a crewed race balloon,
+killing both pilots, in a dispute over whether it had clearance.</p>
+<p>So the cost figures in this article use the conservative design:
+flights end over Europe. Hemispheric loops are an upside if propulsion,
+routing and permissions are solved.</p>
+<h2
+id="finding-7-canada-nearly-doubles-each-balloons-useful-time">Finding
+7: Canada nearly doubles each balloon’s useful time</h2>
+<p>Balloons launched from western Canada spent 46 % of their flight time
+over places the network serves, against about 24 % for Europe-only
+service over the same 60 days. Every one reached Europe.</p>
+<p>We launched 36 sixty-day flights from Vancouver, Prince George and
+Calgary, one per site per month, with the fuel cell and the 3 m/s
+propeller (<code>run_multipass.py</code>,
+<code>LAUNCH_SET=canada</code>). In winter the westerlies run from
+British Columbia across Canada and the North Atlantic to Europe.</p>
+<p>Median days per 60-day flight:</p>
+<ul>
+<li>Over Canada: 4.8</li>
+<li>Over the North Atlantic shipping lanes: 4.5</li>
+<li>Over Europe (first arrival around day 10): 12.6</li>
+<li><strong>Useful total (median of per-flight totals):
+22.4</strong></li>
+</ul>
+<p>June–August launches averaged about 35 useful days; December–February
+launches about 16. China was still clipped on 72 % of flights within the
+60 days, for a median 0.7 days. That is another reason to end flights
+over Europe.</p>
+<p>Canada brings more than airspace. It has cheap low-carbon hydro power
+in Quebec and British Columbia for hydrogen, Atlantic ports at Halifax
+and St. John’s for ships, MDA’s aerospace industry, and Telesat’s
+Lightspeed constellation as a backstop. Arctic coverage would be a
+separate design problem, needing the fuel cell and stronger propulsion.
+On balance Canada helps scalability.</p>
+<h2 id="being-surgical-where-a-constellation-is-a-blanket">Being
+surgical where a constellation is a blanket</h2>
+<p>Balloons can put about three times Starlink’s capacity over a 300 km
+zone within a day or two, because they can be stacked over one place and
+satellites can’t. The price is a surge of several hundred launches a
+day.</p>
+<p>A constellation spreads the same capacity over every square
+kilometre, controlled by whoever runs it. The balloon layer can be
+precise in six ways:</p>
+<ul>
+<li><strong>Where.</strong> A 5° phased-array beam from 20 km lights a
+spot about 1.7 km across (2 × 20 km × tan 2.5°): one valley, port or
+convoy.</li>
+<li><strong>When.</strong> Coverage for an afternoon, a week or a
+season, leaving nothing behind.</li>
+<li><strong>How much.</strong> Stack balloons over one zone by launching
+upwind or steering existing ones.</li>
+<li><strong>Who.</strong> Priority for responders and hospitals, and an
+island mode that keeps a cut-off region’s phones talking to each
+other.</li>
+<li><strong>What.</strong> Radios come home every flight, so payloads
+change per mission: thermal cameras, ship-tracking receivers, anti-jam
+arrays.</li>
+<li><strong>Spectrum.</strong> Each country’s own bands, through its own
+mobile operators.</li>
+</ul>
+<p>The clearest test is a regional blackout. We modelled a zone 300 km
+in radius losing towers, fibre and grid power
+(<code>outage_scenario.py</code>): about 34 million people at 120 per
+km², roughly France’s average density. Demand assumes 15 % of people
+active at 100 kbps for voice and text, or 5 % at 1 Mbps for degraded
+data. Capacity assumes 2 Gbps per balloon. Drift speeds come from the
+2025 runs.</p>
+<p>For a 300 km zone (demand 0.5 Tbps for voice and text, 1.7 Tbps for
+degraded data):</p>
+<ul>
+<li><strong>Summer, voice and text:</strong> 254 balloons aloft, 141
+launches a day, about €1.8 M a day; first coverage in 14–36 h.</li>
+<li><strong>Summer, degraded data:</strong> 848 balloons, 472 launches a
+day, about €5.9 M a day; 14–36 h.</li>
+<li><strong>Winter, voice and text:</strong> 254 balloons, 443 launches
+a day, about €5.5 M a day; 5–11 h.</li>
+<li><strong>Winter, degraded data:</strong> 848 balloons, 1,476 launches
+a day, about €18 M a day; 5–11 h.</li>
+</ul>
+<p>Costs use €12,400 a flight, an earlier mid-case figure; at the
+€11,100 above they are about 10 % lower.</p>
+<p>Starlink’s pro-rata capacity over the same zone is about 0.55 Tbps,
+and every user needs a dish and power. Traffic leaves the zone over
+laser links between balloons, which can see each other up to about 1,000
+km apart at 20 km. It reaches working networks outside the zone, or
+allied satellites.</p>
+<p>The same mechanism serves other missions. Summer fire watch over a
+300 km zone needs only about 1.3–2 launches a day to keep three balloons
+overhead, since the summer crossing takes about 43 hours. That is about
+€15–25k a day. Fire season is when stratospheric winds are slowest.
+Phones lost in mountains or at sea can be located by timing and angle
+across several balloons. Cameras on board would map at 0.25–0.7 m from
+20 km (20 km × 3.45 µm pixels / 100–300 mm lenses), shuttered outside
+allied airspace.</p>
+<h2
+id="jamming-where-balloons-beat-starlink-and-where-they-dont">Jamming:
+where balloons beat Starlink, and where they don’t</h2>
+<p>Against a distant ground jammer, a balloon has about a 20 dB
+geometric advantage that a satellite in low orbit lacks. Against a
+jammer next to the user, Starlink’s dish beats a phone. A small
+directional terminal gives balloon users the same protection, more
+cheaply.</p>
+<p>The numbers are free-space path-loss ratios, 20·log10 of the distance
+ratio:</p>
+<ul>
+<li><strong>Distant jammer.</strong> A user 20 km below a balloon and a
+jammer 200 km away: 20·log10(200/20) = <strong>20 dB</strong> in the
+user’s favour, a factor of 100. From 550 km up, the user and a jammer a
+few hundred km off are at similar distances, so a satellite gets almost
+no natural advantage.</li>
+<li><strong>Signal at the phone.</strong> A base station 20 km up is
+about 27 times closer than one at 550 km: 20·log10(550/20) ≈ <strong>29
+dB</strong>, about 800 times more signal. That is why ordinary phones
+work, and why satellite direct-to-phone services get only a few Mbps per
+beam.</li>
+</ul>
+<p>Threat by threat:</p>
+<ul>
+<li><strong>Distant ground jammer:</strong> Starlink has little
+geometric edge; the balloon has about 20 dB. Balloons better.</li>
+<li><strong>Signal strength at a phone:</strong> weak from orbit; about
+29 dB stronger from 20 km. Balloons better.</li>
+<li><strong>Jammer next to the user:</strong> Starlink’s dish beam
+rejects it well. Phones have no dish, but an optional panel rejects
+low-angle jammers by about 20–30 dB. Phones worse; with a directional
+terminal, even or better.</li>
+<li><strong>Backhaul:</strong> laser cross-links on both sides.
+Even.</li>
+<li><strong>Losing a node:</strong> many satellites, versus an €11k
+flight with hundreds launched a day. Even.</li>
+<li><strong>Hardware refresh:</strong> about five years for a satellite,
+versus every flight cycle, in weeks. Balloons better.</li>
+<li><strong>Who can switch it off:</strong> one foreign company, versus
+an allied operator or authority. Balloons better.</li>
+</ul>
+<p>A directional terminal works for balloons the same way Starlink’s
+dish does, and it is easier to build. A jammer next to the user sits
+near the horizon. The balloon is roughly 15–90° up within a 40–80 km
+footprint, so an antenna pointing up puts the jammer in its side lobes,
+typically 20–30 dB down. Three things make it cheaper than Starlink’s
+terminal:</p>
+<ul>
+<li><strong>The target barely moves.</strong> A low-orbit satellite
+crosses the sky in minutes, so Starlink’s dish needs fast beam-steering
+and frequent handovers. A balloon typically drifts at 10–70 km/h (the
+2025 runs; median 24 km/h). A slow-steering panel, or a fixed one
+re-aimed occasionally, is enough.</li>
+<li><strong>The signal is already strong.</strong> With about 29 dB less
+path loss, a smaller antenna gives the same margin. A 30 cm panel at 2.6
+GHz has roughly 16 dBi of gain and a beam about 25–30° wide, enough to
+separate the balloon from a horizon jammer. Starlink’s dish is about 50
+cm at 12 GHz.</li>
+<li><strong>Several balloons are in view.</strong> With 2–3 balloons
+overhead, the terminal can choose the one farthest in angle from the
+jammer.</li>
+</ul>
+<p>It could come as a roof or mast panel for homes, clinics and command
+posts, a flat panel for vehicles and ships, or a small phased-array
+patch on a responder’s radio. The sizes are engineering estimates, not
+simulation results. Two limits remain. Ordinary phones keep only the
+geometry and signal-strength advantages. And a jammer on a drone or
+aircraft above the user defeats a directional terminal, as it does
+Starlink’s.</p>
+<p>Two more capabilities follow from the mesh. Many balloons hear the
+same jammer from different places, so timing and angle differences can
+locate it. And the glider’s return must not depend on satellite
+navigation, which is jammed routinely near Kaliningrad. Star trackers
+(the sky at 20 km is dark enough), inertial navigation, ranging between
+balloons and magnetic-anomaly maps give position fixes without GNSS.
+Onboard software fuses them and flags spoofed signals.</p>
+<h2
+id="capacity-allied-satellites-plus-balloons-match-what-starlink-carries">Capacity:
+allied satellites plus balloons match what Starlink carries</h2>
+<p>Europe’s and Canada’s own satellites plus the balloon fleet carry
+about 9–11 Tbps over the region. That is more than the roughly 5 Tbps
+Starlink actually carries there.</p>
+<p>Over the Europe region:</p>
+<ul>
+<li><strong>Starlink, its share of network capacity:</strong> about 21
+Tbps (<code>cost_model.py</code>: ~600 Tbps network × regional
+share).</li>
+<li><strong>Starlink, traffic actually carried:</strong> about 5 Tbps
+(25 % load factor, assumed).</li>
+<li><strong>Allied satellites by about 2030:</strong> 1.5–3 Tbps. <a
+href="https://www.csimagazine.com/csi/Eutelsat-Konnect-VHTS-enters-service.php">KONNECT
+VHTS</a>, 500 Gbps over Europe, North Africa and the Middle East; <a
+href="https://www.spaceintelreport.com/eu-commission-on-iris2-multi-orbit-constellation-are-we-ready-to-compromise-no-but-well-accept-tradeoffs-if-needed">IRIS²</a>,
+a reported 3.3 Tbps goal worldwide from 2030; <a
+href="https://spaceq.ca/?p=31873">Telesat Lightspeed</a>, at least about
+10 Tbps worldwide from early 2028.</li>
+<li><strong>Balloon coverage fleet, about 3,850 balloons:</strong> about
+7.7 Tbps (2 Gbps per balloon, assumed).</li>
+</ul>
+<p>Capacity per balloon is the weakest assumption. Loon-era LTE gave
+roughly 10–40 Mbps per balloon. The 2 Gbps figure assumes modern 5G
+phased arrays with several reused beams, 100–200 MHz of spectrum and 2–5
+bit/s/Hz.</p>
+<p>Cities stay on towers and fibre, so balloons don’t need urban
+density. Matching Starlink’s full raw capacity rather than its traffic
+would take about 10,500 balloons and roughly €9 billion a year at 2 Gbps
+each (2.7 × the €3.4 billion fleet). At 5 Gbps it would take about 4,200
+balloons and €3.7 billion. That makes radio capacity the most valuable
+research target after the glider.</p>
+<h2 id="cost-against-starlink-counted-both-ways">Cost against Starlink,
+counted both ways</h2>
+<p>As a standalone network, the balloon layer costs about €3.4 billion a
+year against €6–10 billion to run Starlink’s whole constellation.
+Charged only for its slice over Europe, Starlink is about 12 times
+cheaper per km².</p>
+<ul>
+<li><strong>Starlink, whole constellation:</strong> €6–10 billion a year
+(USD 7–12 billion: SpaceX’s 2025 connectivity-segment costs plus
+estimated capex, in <code>cost_model.py</code>). Users need a dish, USD
+300–600.</li>
+<li><strong>Balloon layer, about 95 % of the region, mid case:</strong>
+€3.4 billion a year (€1.5–9.2 billion). Users need nothing: phones
+connect directly.</li>
+</ul>
+<p>Both ways of counting are fair, but they answer different questions.
+Charging Starlink only for the 3–4 % of its constellation over this
+region gives about €27 per km² a year. On that basis the balloon layer
+is about 12 times dearer, or about 6 times with 60–80 km footprints. A
+thinner hybrid service came to about 4.6 times: balloons target 50 %
+coverage over populated land only, with satellites filling the gaps
+(<code>cost_reduction.py</code>).</p>
+<p>But nobody can buy a Europe-only constellation: orbits cover the
+whole world whether you want them to or not. For a sovereign European
+and Canadian layer, the relevant number is what the layer itself costs.
+That is single-digit billions a year, with no rockets, no terminals and
+no foreign point of control.</p>
+<h2 id="what-is-not-solved-yet">What is not solved yet</h2>
+<p>Seven risks could break the case. Each has evidence from the
+simulations and a mitigation to test.</p>
+<ul>
+<li><strong>Winter winds.</strong> January–March flights last 1.3–1.9
+days; winter needs three to four times the summer launch rate.
+Mitigation: ship and mobile launch, the Canada loop.</li>
+<li><strong>Capacity per balloon.</strong> 2 Gbps is an assumption, not
+a test. Mitigation: phased-array 5G research first.</li>
+<li><strong>Thin-film reliability.</strong> 25–30 µm film at 1,000 Pa is
+unproven at volume. Mitigation: flight tests and an automated quality
+line.</li>
+<li><strong>Navigation without GNSS.</strong> The glider’s return
+assumes a position fix. Mitigation: star tracker, inertial navigation,
+mesh ranging.</li>
+<li><strong>Hydrogen safety.</strong> About 14 kg a flight; the EU
+Seveso III directive’s lower tier starts at 5 t of hydrogen on one site.
+Mitigation: make hydrogen on ships, keep sites under 5 t.</li>
+<li><strong>Envelope litter.</strong> About 300,000 flights a year ×
+about 17 kg ≈ 5,000 t of polyethylene; 34 % of today’s simulated
+landings are at sea. Mitigation: steered cut-downs, paid pickup,
+recovery ships.</li>
+<li><strong>Spectrum and borders.</strong> National bands; signals spill
+across borders. Mitigation: operator partnerships under the WRC-23 rules
+for high-altitude IMT base stations (HIBS), which identified the
+700/800/900 MHz, 1.8 GHz and 2.6 GHz mobile bands for platforms like
+these.</li>
+</ul>
+<p>Burning envelopes at altitude is not a fix. Our screening model
+(<code>burn_sim.py</code>) found the hydrogen holds enough energy only
+if 19 % of its heat reaches the film. The median burn consumed 90 %, but
+leftover shreds scattered over a strip about 200 km long. A complete
+burn releases about 215 kg of CO₂ per balloon.</p>
+<h2 id="a-phased-natoeu-programme">A phased NATO–EU programme</h2>
+<p>Start with a summer pilot over the Mediterranean, where the winds are
+kindest and the value clearest. Stop cheaply if its numbers don’t
+hold.</p>
+<ol type="1">
+<li><strong>Pilot: Mediterranean fire watch and outage
+response.</strong> Three 300 km zones for one summer: 3 zones × 90 days
+× about 2 launches a day ≈ 540 flights. That is about €6 million of
+operations at €11k a flight, plus a development budget still to be
+scoped. It proves the three technologies the case rests on: glider
+return, thin-film envelope and radio capacity.</li>
+<li><strong>Flanks: Baltic and western Black Sea.</strong> Year-round
+service including winter, anti-jam arrays and jammer location. Ships
+handle launch, recovery and hydrogen.</li>
+<li><strong>Continental: Europe-wide layer with the Canada
+loop.</strong> About 95 % of the region outside cities, at about €3.4
+billion a year in the mid case, integrated with IRIS², OneWeb and
+Telesat Lightspeed.</li>
+</ol>
+<p>The ask has four parts:</p>
+<ul>
+<li><strong>Mandate and fund the pilot</strong> through civil-protection
+and defence instruments. rescEU and the European Defence Fund fit the
+Mediterranean phase; NATO’s DIANA accelerator and the resilience
+spending allies agreed in 2025 fit the flanks. Funding routes still need
+confirming with each programme.</li>
+<li><strong>Harmonise spectrum.</strong> CEPT and its Electronic
+Communications Committee could harmonise the WRC-23 HIBS bands, with
+national emergency use agreed in advance.</li>
+<li><strong>Open the airspace.</strong> A standing framework for fleets
+of unmanned free balloons: pre-approved launch pads, sea zones and
+cut-down areas.</li>
+<li><strong>Build an allied consortium.</strong> European film makers;
+Nokia and Ericsson for radios; Airbus, Thales and Leonardo for
+integration; MDA and Telesat in Canada; shipyards; and the mobile
+operators whose spectrum the network uses. Canada should be a founding
+partner, because the transatlantic loop is what makes the fleet
+efficient.</li>
+</ul>
+<h2 id="methods-assumptions-and-sources">Methods, assumptions and
+sources</h2>
+<p>Simulation results are reproducible from the repository. Engineering
+assumptions and outside figures are listed so readers can challenge
+them.</p>
+<p><strong>Simulation scripts</strong> (private repository, available on
+request):</p>
+<ul>
+<li>Station-keeping, 528 flights: <code>run_coverage.py</code>,
+<code>analyze.py</code></li>
+<li>One-way crossings, 360 flights: <code>run_drift.py</code>,
+<code>analyze_drift.py</code></li>
+<li>Forecast-lookahead planner: <code>planner.py</code></li>
+<li>Ship versus land launch: <code>run_ship.py</code></li>
+<li>Glider design and release policy: <code>glide.py</code>,
+<code>glide_tuning.py</code>, <code>glider_sizing.py</code></li>
+<li>Envelope landings and burning: <code>analyze_envelopes.py</code>,
+<code>burn_sim.py</code></li>
+<li>Hemispheric, fuel-cell, propulsion and Canada flights:
+<code>run_multipass.py</code>, <code>analyze_multipass.py</code>,
+<code>china.py</code>, <code>canada.py</code></li>
+<li>Envelope mass and cost: <code>envelope_cost.py</code></li>
+<li>Fleet cost and levers: <code>cost_model.py</code>,
+<code>cost_reduction.py</code>, <code>combined_cost.py</code></li>
+<li>Regional outage: <code>outage_scenario.py</code></li>
+</ul>
+<p><strong>Key engineering assumptions</strong> (not simulated): 2 Gbps
+per balloon; payload unit cost 70 % of €35,000 and about 15 flights of
+life; envelope unit costs from the bottom-up model; forecast-based
+launch-site choice worth ×1.35 on dwell; Starlink traffic at 25 % of
+capacity; winds below 13.6 km taken as the 150 hPa wind tapered to 30 %
+at the surface.</p>
+<p>Starlink’s costs and capacity come from the secondary analyses of
+SpaceX’s 2025 filing cited in the repository’s
+<code>results/cost_comparison.md</code>.</p>
+<h2 id="sources">Sources</h2>
+<ul>
+<li>Google Balloon Learning Environment:
+https://github.com/google/balloon-learning-environment</li>
+<li>Open-Meteo historical forecast API (GFS winds, CC BY 4.0):
+https://open-meteo.com/</li>
+<li>NOAA PSL, NCEP/NCAR Reanalysis-1:
+https://psl.noaa.gov/data/gridded/data.ncep.reanalysis.html</li>
+<li>Starlink global outage, 24 July 2025 (Reuters via Daily Maverick):
+https://www.dailymaverick.co.za/article/2025-07-25-elon-musks-starlink-network-suffers-rare-global-outage/</li>
+<li>Starlink restrictions in Ukraine (CNN/Isaacson report via Mezha):
+https://mezha.ua/en/2023/09/07/elon-musk-thwarts-ukraine-s-attack-on-russian-fleet-in-crimea-cnn</li>
+<li>Iberian blackout and mobile networks, 28 April 2025 (Broadband
+Breakfast, Ookla data):
+https://broadbandbreakfast.com/iberian-blackout-highlights-gaps-in-telecom-network-resiliency/</li>
+<li>GNSS interference around Kaliningrad and the Baltic (Spire,
+2024/2025):
+https://spire.com/blog/space-reconnaissance/gnss-interference-report-russia/</li>
+<li>Eutelsat KONNECT VHTS enters service, 500 Gbps (CSI Magazine):
+https://www.csimagazine.com/csi/Eutelsat-Konnect-VHTS-enters-service.php</li>
+<li>IRIS²: about 290 satellites, reported 3.3 Tbps goal, 2030 (Space
+Intel Report):
+https://www.spaceintelreport.com/eu-commission-on-iris2-multi-orbit-constellation-are-we-ready-to-compromise-no-but-well-accept-tradeoffs-if-needed</li>
+<li>SpaceRISE IRIS² concession (Eutelsat release):
+https://www.mynewsdesk.com/eutelsat/pressreleases/spacerise-consortium-inks-agreement-as-concessionaire-for-the-european-unions-landmark-iris2-constellation-3360767</li>
+<li>Telesat Lightspeed, about 10 Tbps (SpaceQ):
+https://spaceq.ca/?p=31873 ; expansion to 225 satellites and Q1 2028
+service (Runway Girl Network):
+https://runwaygirlnetwork.com/2026/09/telesat-restores-commercial-lightspeed-capacity-with-more-satellites/</li>
+<li>Convention on International Civil Aviation (Chicago, 1944), Article
+8, ICAO Doc 7300:
+https://en.wikisource.org/wiki/Convention_on_International_Civil_Aviation</li>
+<li>Chinese surveillance balloon shot down, 4 February 2023 (Air &amp;
+Space Forces Magazine):
+https://www.airandspaceforces.com/chinese-surveillance-balloon-shot-down-f-22/</li>
+<li>Belarus shoots down a Gordon Bennett race balloon, 12 September 1995
+(RFE/RL):
+https://www.rferl.org/a/belarus-american-balloonists-tragedy-25-years-shot-down/30975038.html</li>
+<li>Directive 2012/18/EU (Seveso III), Annex I, hydrogen thresholds:
+https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32012L0018</li>
+<li>WRC-23 outcome for HIBS bands (CTU summary):
+https://ctu.int/wp-content/uploads/2023/12/Main-WRC-23-Result-20.02.24.pdf</li>
+</ul>

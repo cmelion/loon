@@ -1,0 +1,234 @@
+{
+ "script": "scenarios/tools/glide_cases.py (glide.py physics; designs/policy from glide_tuning.py)",
+ "today_design": {
+  "ld": 12.0,
+  "sink_sl": 1.5
+ },
+ "tuned_design": {
+  "ld": 14.0,
+  "sink_sl": 1.4293001057055614,
+  "wing_kg_m2": 20.0
+ },
+ "margin_km": 100.0,
+ "range_km": 500.0,
+ "A_today_rule_today_glider": {
+  "site": "Sochi",
+  "release_h": 13.0,
+  "miss_km": 14.8,
+  "duration_h": 2.1,
+  "recovered": true
+ },
+ "B_today_rule_tuned_glider": {
+  "site": "Sochi",
+  "release_h": 13.0,
+  "miss_km": 3.0,
+  "margin_km": 51.3,
+  "duration_h": 1.89,
+  "recovered": true,
+  "mc": {
+   "n": 51,
+   "recovered": 47,
+   "frac": 0.922,
+   "worst": {
+    "bias_ms": 5.0,
+    "bias_dir_deg": 135,
+    "taper": 1.0,
+    "miss_km": 34.8
+   }
+  }
+ },
+ "reachability_by_hour": [
+  {
+   "h": 1.0,
+   "t": "2025-03-15T07:00:00+00:00",
+   "lat": 44.468,
+   "lon": 27.551,
+   "hpa": 77.7,
+   "site": "Constanta",
+   "margin_km": 193.8,
+   "dist_km": 88.6,
+   "miss_km": 3.0,
+   "duration_h": 2.18
+  },
+  {
+   "h": 2.0,
+   "t": "2025-03-15T08:00:00+00:00",
+   "lat": 44.659,
+   "lon": 28.914,
+   "hpa": 75.6,
+   "site": "Constanta",
+   "margin_km": 137.0,
+   "dist_km": 56.8,
+   "miss_km": 2.9,
+   "duration_h": 1.87
+  },
+  {
+   "h": 3.0,
+   "t": "2025-03-15T09:00:00+00:00",
+   "lat": 44.738,
+   "lon": 30.311,
+   "hpa": 82.2,
+   "site": "Odesa",
+   "margin_km": -19.7,
+   "dist_km": 198.2,
+   "miss_km": 19.7,
+   "duration_h": 2.16
+  },
+  {
+   "h": 4.0,
+   "t": "2025-03-15T10:00:00+00:00",
+   "lat": 44.751,
+   "lon": 31.542,
+   "hpa": 88.8,
+   "site": "Odesa",
+   "margin_km": -88.7,
+   "dist_km": 205.2,
+   "miss_km": 88.7,
+   "duration_h": 1.92
+  },
+  {
+   "h": 5.0,
+   "t": "2025-03-15T11:00:00+00:00",
+   "lat": 44.706,
+   "lon": 32.725,
+   "hpa": 95.7,
+   "site": "Odesa",
+   "margin_km": -154.9,
+   "dist_km": 254.2,
+   "miss_km": 154.9,
+   "duration_h": 1.57
+  },
+  {
+   "h": 6.0,
+   "t": "2025-03-15T12:00:00+00:00",
+   "lat": 44.654,
+   "lon": 33.909,
+   "hpa": 95.7,
+   "site": "Sochi",
+   "margin_km": -84.9,
+   "dist_km": 476.7,
+   "miss_km": 84.9,
+   "duration_h": 2.09
+  },
+  {
+   "h": 7.0,
+   "t": "2025-03-15T13:00:00+00:00",
+   "lat": 44.6,
+   "lon": 35.053,
+   "hpa": 95.7,
+   "site": "Sochi",
+   "margin_km": 1.6,
+   "dist_km": 387.3,
+   "miss_km": 2.9,
+   "duration_h": 2.09
+  },
+  {
+   "h": 8.0,
+   "t": "2025-03-15T14:00:00+00:00",
+   "lat": 44.488,
+   "lon": 36.14,
+   "hpa": 95.7,
+   "site": "Sochi",
+   "margin_km": 53.3,
+   "dist_km": 301.2,
+   "miss_km": 2.7,
+   "duration_h": 2.09
+  },
+  {
+   "h": 9.0,
+   "t": "2025-03-15T15:00:00+00:00",
+   "lat": 44.361,
+   "lon": 37.236,
+   "hpa": 95.8,
+   "site": "Sochi",
+   "margin_km": 101.9,
+   "dist_km": 214.5,
+   "miss_km": 2.8,
+   "duration_h": 2.09
+  },
+  {
+   "h": 10.0,
+   "t": "2025-03-15T16:00:00+00:00",
+   "lat": 44.229,
+   "lon": 38.315,
+   "hpa": 87.8,
+   "site": "Sochi",
+   "margin_km": 154.4,
+   "dist_km": 131.1,
+   "miss_km": 2.6,
+   "duration_h": 2.13
+  },
+  {
+   "h": 11.0,
+   "t": "2025-03-15T17:00:00+00:00",
+   "lat": 44.127,
+   "lon": 39.274,
+   "hpa": 75.2,
+   "site": "Sochi",
+   "margin_km": 198.7,
+   "dist_km": 67.8,
+   "miss_km": 2.9,
+   "duration_h": 2.19
+  },
+  {
+   "h": 12.0,
+   "t": "2025-03-15T18:00:00+00:00",
+   "lat": 44.046,
+   "lon": 40.209,
+   "hpa": 74.0,
+   "site": "Sochi",
+   "margin_km": 170.0,
+   "dist_km": 64.2,
+   "miss_km": 2.9,
+   "duration_h": 2.13
+  },
+  {
+   "h": 13.0,
+   "t": "2025-03-15T19:00:00+00:00",
+   "lat": 43.943,
+   "lon": 41.141,
+   "hpa": 74.0,
+   "site": "Sochi",
+   "margin_km": 51.3,
+   "dist_km": 121.8,
+   "miss_km": 3.0,
+   "duration_h": 1.89
+  },
+  {
+   "h": 14.0,
+   "t": "2025-03-15T20:00:00+00:00",
+   "lat": 43.81,
+   "lon": 42.041,
+   "hpa": 74.0,
+   "site": "Sochi",
+   "margin_km": -41.8,
+   "dist_km": 189.6,
+   "miss_km": 41.8,
+   "duration_h": 1.82
+  }
+ ],
+ "C_tuned_rule_tuned_glider": {
+  "h": 12.0,
+  "t": "2025-03-15T18:00:00+00:00",
+  "lat": 44.046,
+  "lon": 40.209,
+  "hpa": 74.0,
+  "site": "Sochi",
+  "margin_km": 170.0,
+  "dist_km": 64.2,
+  "miss_km": 2.9,
+  "duration_h": 2.13,
+  "mc": {
+   "n": 51,
+   "recovered": 51,
+   "frac": 1.0,
+   "worst": {
+    "bias_ms": 2.5,
+    "bias_dir_deg": 135,
+    "taper": 0.1,
+    "miss_km": 3.0
+   }
+  },
+  "coverage_lost_h": -0.1
+ }
+}
