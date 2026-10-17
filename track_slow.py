@@ -109,7 +109,8 @@ def main():
   sites = list(rd.LAUNCH.items())
   kind = 'slow'
   tag = ('' if year == 2025 and eb.DEFAULT_GRID == 'data/gfs_europe_2025.npz' else f'_{year}') + \
-        (f'_{rd.VEHICLE}' if rd.VEHICLE else '')
+        (f'_{rd.VEHICLE}' if rd.VEHICLE else '') + \
+        (f"_{os.environ['LAUNCH_SET']}" if os.environ.get('LAUNCH_SET') else '')  # never overwrite the baseline
   out_tracks, out_summary = f'results/slow_tracks{tag}.csv', f'results/slow_tracks{tag}_summary.csv'
   if not tag:
     out_summary = 'results/slow_tracks_summary.csv'

@@ -26,7 +26,9 @@ from europe_ble import WindGrid  # noqa: E402
 
 GRIDS = {'gfs_taper': 'data/gfs_europe_2025.npz',
          'ncep_taper': 'data/ncep_europe_upper_2025.npz',
-         'ncep_full': 'data/ncep_europe_full_2025.npz'}
+         'ncep_full': 'data/ncep_europe_full_2025.npz',
+         'era5_taper': 'data/era5_europe_upper_2025.npz',
+         'era5_full': 'data/era5_europe_2025.npz'}
 POLICIES = [('last', 100.0), ('causal120', 100.0)]
 
 

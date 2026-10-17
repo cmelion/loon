@@ -52,6 +52,8 @@ Regenerate with `fetch.py` (throttled for the free tier, ~40 min).
 
 ## Reviews
 
+- `results/reruns_2026-10-17.md`: M4 reruns on 17 October 2026 — ERA5 ingest and checks, shear, glider on ERA5, forecast-only release, power budgets, Loon-class outage, class M heavy vehicle, Nordic coverage, Canada on the ERA5 band. Wind data: releases `data-era5` and `data-ncep`.
+
 - `medium/review.md`: internal fact-check of the Medium draft against `results/` (2026-10-17).
 - `medium/panel_review.md`: external five-model review of the same draft, with the reruns it asks for (2026-10-17). Headline: the physics holds; €3.4 B/yr, 98 % recovery and 5.4-day dwell do not survive as findings until the forecast-only glider release, the redesigned vehicle and full-column descent winds are in the runs.
 - `results/cost_funding_vs_starlink.md`: cost per person, four ways of pricing equivalent Starlink bandwidth, terminal and refresh costs, funding models (permanent layer vs readiness), and the utility/shortfall lists against Starlink (2026-10-17).
