@@ -72,6 +72,34 @@ Your framing is right and the data supports it: deploy what is needed, where it 
 3. **Direct-to-cell is the competitor for A, not for D.** It reaches phones everywhere at low rates. It does not add capacity to a stricken region either.
 4. **The limit is time.** First coverage arrives 5–36 hours after launch, and winter needs 443 launches a day for voice alone. The Iberian blackout was over for most people before a balloon would have arrived. The layer's surge case is the multi-day event: floods, large fires, earthquakes, war damage, and any grid failure that runs past the first night. Say so in the article; a reader who remembers Iberia will otherwise say it for you.
 
+## F. A thin standing layer, with surge from nearby sites
+
+The readiness model in `cost_funding_vs_starlink.md` §4 assumed a fleet that sits in a warehouse until called. That is the weak form. The stronger form keeps a small number of balloons up all the time, so the launch sites, crews, envelope line and recovery loop are exercised daily rather than twice a year, and surges from the sites nearest and upwind of the place that needs them. The arithmetic for the standing part, at the planning case's €11.1 k a flight:
+
+| Balloons aloft, all year | Launches a day (useful dwell 1.98 d) | Flights a year | Flight cost a year | Share of the region's land within a 194 km ring, random placement | Same at the article's 40–80 km service footprints |
+|---|---|---|---|---|---|
+| 25 | 13 | 4,600 | €51 M | 34 % | 2–7 % |
+| 50 | 25 | 9,200 | €102 M | 57 % | 3–13 % |
+| 100 | 50 | 18,400 | €205 M | 81 % | 7–25 % |
+| 200 | 101 | 36,900 | €409 M | 96 % | 13–43 % |
+
+Launches a day halve if the full dwell (3.65 d) rather than the post-release useful dwell is used; the truth is between. Coverage uses the random-placement formula from `cost_model.py` (1 − e^(−N·A/land), land ≈ 7.1 M km²) and depends entirely on the footprint: 194 km is the radio horizon at 5° elevation, the article's service footprint is 40–80 km, and the radio that sets which applies does not yet exist. Either way the standing layer is thin on capacity, 100 balloons at 2 Gbps is about 28 kbps per km² of land, so it is presence and practice, not service.
+
+Laser mesh. The standing layer also has to be dense enough that the balloons can see each other, or the backhaul between them does not exist. With optical links good to 500–700 km once the path clears the lower atmosphere, and balloons placed at random over the region's 7.1 M km² of land, the mean nearest-neighbour distance and the mean number of neighbours in range are:
+
+| Balloons aloft | Mean nearest neighbour | Neighbours within 500 km | Within 700 km | Mesh state |
+|---|---|---|---|---|
+| 25 | 266 km | 2.8 | 5.4 | fragmented at 500 km; one connected cluster at 700 km |
+| 50 | 188 km | 5.5 | 10.8 | one connected cluster at 500 km; fully connected at 700 km |
+| 100 | 133 km | 11 | 22 | fully connected at either range |
+| 200 | 94 km | 22 | 43 | fully connected with margin |
+
+(Random geometric graph: mean degree N·π·r²/A; a giant component forms above about 4.5 neighbours; no isolated nodes needs roughly ln N + 3. Over the whole 10.9 M km² box including sea the thresholds move up about one row.) So fifty balloons is the floor for a mesh that holds together at the shorter link range, a hundred is the comfortable number, and twenty-five is a set of islands. Two things help the real fleet relative to random placement: in winter the balloons stream along the conveyor and form a chain, which is a fine backhaul topology as long as each link along it closes, and the surge concentrates nodes exactly where the mesh is needed. Two things hurt: the chain's ends still need a gateway in view, and a cluster that drifts over sea or beyond the last gateway is cut off. A gateway within the 194 km visibility ring of any balloon over land means roughly sixty gateway sites on a 350 km grid, which is a fixed-cost line not yet in the model.
+
+What it buys. Fifty to a hundred balloons up all year cost €0.1–0.2 B in flights, which sits inside the €0.2–0.5 B readiness range once sites, operations and stock are added. It answers the external review's sharpest objection to readiness, that a fleet which never flies is not ready and its production base goes cold, and it gives responders (C) something to train on every day. It also gives the surge a head start: balloons already aloft upwind of an event are the first to arrive.
+
+Surge from nearby. Winter voice-and-text for a 300 km zone needs 443 launches a day, about nine or ten sites at the model's 48 launches a site, and those sites must be upwind of the zone, 200–1,000 km away in winter winds of 20–40 m/s, which is a 2–14 hour transit. Since the zone is not known in advance, "nearby" means a network of 30–50 sites spread across the region, or mobile launchers on trucks and ships, not ten fixed sites. The repo's full-scale model already carries 50 sites; a standing layer of 50–100 balloons keeps a dozen of them busy every day and the rest warm. The time-to-coverage limit in §D does not go away, but a standing layer shortens the first hours.
+
 ## E. Contention and denial of service
 
 Two questions that come up as soon as D is the case: do regions compete for Starlink's capacity, and is denial of service a concern? Yes to both, for both systems, in different ways.
@@ -84,7 +112,9 @@ The balloon layer has the same contention within a balloon (2 Gbps shared across
 
 1. *Demand overload.* In an outage everybody calls at once. Every public network needs priority and pre-emption classes for responders (the UK's MTPAS and the US WPS are the models). The balloon layer must have this designed into its core from the start or C gets nothing when D happens; it is uncosted.
 2. *Volumetric attacks on the network.* Gateways, points of presence and the core are internet-facing in both systems and are attacked the way any ISP's are. A satellite or balloon access network is more exposed than a fibre network because the access capacity is small and shared, so a flood that would be noise on terrestrial links can fill a beam. Mitigation is standard but costs money and staff, and it is not in either cost model.
-3. *Radio denial.* Jamming is the physical-layer version and is covered in the article and in `cost_funding_vs_starlink.md` §5. Starlink has had to harden against it in Ukraine; the balloon layer's geometry helps on some links and hurts on others. Neither is immune.
+3. *Radio denial.* Jamming is the physical-layer version and is covered in the article and in `cost_funding_vs_starlink.md` §5. Here geography does favour the balloon, and the reason is reach rather than power. A node can only be hit over the air by a transmitter that can see it. A balloon at 20 km is visible from about 194 km at a 5° elevation mask (504 km to the geometric horizon); a satellite at 550 km is visible from about 940 km at Starlink's 25° mask and about 2,060 km at 5°. The area from which an attacker can reach the node is therefore some 25 times smaller for the balloon (about 110 times smaller at equal masks). An interferer has to be inside the region to touch a balloon, and it affects one balloon's footprint; a satellite's uplink can be reached from a neighbouring country and a disturbed beam is wide. Two limits: a jammer next to the user is unaffected by any of this, and the same small horizon means the balloon layer needs many more nodes, each of which is a separate target. Starlink has had to harden against interference in Ukraine; neither system is immune.
+
+A related point for internet-borne attacks: the balloon layer can be designed to run as an island during a crisis, with its local core reachable only from inside the region and ingress from the internet closed, in which case a volumetric attack from outside has nothing to reach. A global ISP cannot island one region of its network. This is an architecture choice that has to be made and paid for; it is not a property the layer has by default.
 
 A fourth risk is specific to the balloon layer and was raised in the external review: the fleet itself is a moving network under one command-and-control plane. Compromise of that plane is a denial-of-service and a safety problem at once, and it needs secure boot, key management, accredited operations and an anti-takeover design before anyone flies hundreds of these over populated land. It is a development line, not a caveat.
 
@@ -93,7 +123,9 @@ A fourth risk is specific to the balloon layer and was raised in the external re
 - Per-country uncovered residents from ITU DataHub and a population raster inside the service polygon (A).
 - Any count of person-days in uncovered land (B).
 - National responder headcounts beyond the EU aggregates (C).
-- Priority and pre-emption design, DDoS mitigation and command-plane security for the layer (E), none of which is costed.
+- Priority and pre-emption design, DDoS mitigation, island-mode ingress control and command-plane security for the layer (E), none of which is costed.
+- An optical-mesh connectivity run over the drift tracks (nearest-neighbour distance and link closure per hour) and a gateway-site plan (F).
+- A site-network and mobile-launcher plan that gets 443 launches a day upwind of an unknown zone (F); the current model places 50 sites for full coverage, not for surge geometry.
 - A catalogue of outage events by population-days, which is what a readiness fleet should be sized against (D). The Iberian, Valencia and 2023 earthquake figures above are from press summaries, not an event database.
 
 ## Sources
