@@ -8,7 +8,14 @@ controller) but never modifies run_drift.py. Output:
   results/slow_tracks_summary.csv  one row per flight (dwell_h, end), for
                                    checking against results/drift_2025.csv
 
-Usage: python track_slow.py [--procs 2] [--limit N]
+Usage: python track_slow.py [--procs 2] [--limit N] [--vehicle light]
+  Follows WIND_GRID / YEAR like run_drift.py (rerun 4): the launch dates take
+  the grid's year and the outputs are results/slow_tracks_<year>.csv and
+  results/slow_tracks_<year>_summary.csv (the 2025 GFS run keeps its original
+  names results/slow_tracks.csv and results/slow_tracks_summary.csv). With
+  --vehicle light the light vehicle (vehicle.py) flies and '_light' is added.
+  These per-year track files are what availability.py and
+  mesh_connectivity.py replay (reruns 6 and 7).
 """
 import csv
 import datetime as dt
@@ -34,6 +41,9 @@ def fly_track(job):
   wf = eb.EuropeWindField(grid, lat0, lon0)
   arena = eb.EuropeArena(wf, start, seed, feature_factory=rd.NullFeatures,
                          launch_radius_km=10.0)
+  if rd.VEHICLE:
+    import vehicle
+    vehicle.apply(arena, rd.VEHICLE)
   target, steps, end = None, 0, 'MAX_DAYS'
   max_steps = rd.MAX_DAYS * 24 * 60 // rd.STEP_MIN
   fid = f'{site}_{start.date().isoformat()}_{seed}'
@@ -89,10 +99,20 @@ def fly_track(job):
 def main():
   procs = int(sys.argv[sys.argv.index('--procs') + 1]) if '--procs' in sys.argv else 2
   limit = int(sys.argv[sys.argv.index('--limit') + 1]) if '--limit' in sys.argv else None
-  starts = [dt.datetime(2025, m, d, 6, tzinfo=dt.timezone.utc)
+  if '--vehicle' in sys.argv:
+    rd.VEHICLE = sys.argv[sys.argv.index('--vehicle') + 1]
+    os.environ['VEHICLE'] = rd.VEHICLE
+  import europe_ble as eb
+  year = int(os.environ.get('YEAR', eb.T0.year))
+  starts = [dt.datetime(year, m, d, 6, tzinfo=dt.timezone.utc)
             for m in range(1, 13) for d in (1, 15)]
   sites = list(rd.LAUNCH.items())
   kind = 'slow'
+  tag = ('' if year == 2025 and eb.DEFAULT_GRID == 'data/gfs_europe_2025.npz' else f'_{year}') + \
+        (f'_{rd.VEHICLE}' if rd.VEHICLE else '')
+  out_tracks, out_summary = f'results/slow_tracks{tag}.csv', f'results/slow_tracks{tag}_summary.csv'
+  if not tag:
+    out_summary = 'results/slow_tracks_summary.csv'
   jobs = [(n, la, lo, st, kind, 7919 * i + 31 * j + rd.SEED_C[kind])
           for i, (n, (la, lo)) in enumerate(sites) for j, st in enumerate(starts)]
   if limit:
@@ -100,8 +120,8 @@ def main():
   os.makedirs('results', exist_ok=True)
   t = time.time()
   with mp.get_context('spawn').Pool(procs) as pool, \
-      open('results/slow_tracks.csv', 'w') as ft, \
-      open('results/slow_tracks_summary.csv', 'w') as fs:
+      open(out_tracks, 'w') as ft, \
+      open(out_summary, 'w') as fs:
     wt = ws = None
     for k, (summ, track) in enumerate(pool.imap_unordered(fly_track, jobs)):
       if wt is None:

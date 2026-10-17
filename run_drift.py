@@ -15,7 +15,9 @@ released on a glider at the *last* such moment (glide.simulate_glide), so
 'recover' dwell = time to that release + glide (still transmitting), versus
 'full' dwell if the radio is simply flown until the balloon leaves.
 
-Usage: python run_drift.py [--quick]
+Usage: python run_drift.py [--quick] [--controllers slow,plan] [--vehicle light]
+  --vehicle light flies the costed light vehicle (vehicle.py) instead of BLE's
+  Loon-class balloon and writes results/drift_<year>_light.csv. Rerun 4 (W3).
 """
 import csv
 import datetime as dt
@@ -42,6 +44,7 @@ STEP_MIN = 3
 DECIDE_EVERY = 5  # steps (15 min)
 PLAN_EVERY = 40  # steps (2 h) for the lookahead planner
 APPROACH_HOME = os.environ.get('APPROACH_HOME') == '1'
+VEHICLE = os.environ.get('VEHICLE') or None  # 'light' / 'light4' (vehicle.py), else BLE's balloon
 SEED_C = {'passive': 0, 'slow': 1, 'home': 2, 'plan': 1}  # plan pairs with slow
 
 
@@ -110,6 +113,9 @@ def fly(job):
   wf = eb.EuropeWindField(grid, lat0, lon0)
   arena = eb.EuropeArena(wf, start, seed, feature_factory=NullFeatures,
                          launch_radius_km=10.0)
+  if VEHICLE:
+    import vehicle
+    vehicle.apply(arena, VEHICLE)  # TODO(flight): see vehicle.py docstring
   target, steps, end = None, 0, 'MAX_DAYS'
   path_km, prev = 0.0, (lat0, lon0)
   release = None  # (steps, lat, lon, pressure, date_time, site)
@@ -209,6 +215,11 @@ def main():
   ctrls = CONTROLLERS
   if '--controllers' in sys.argv:
     ctrls = sys.argv[sys.argv.index('--controllers') + 1].split(',')
+  global VEHICLE
+  if '--vehicle' in sys.argv:
+    VEHICLE = sys.argv[sys.argv.index('--vehicle') + 1]
+    os.environ['VEHICLE'] = VEHICLE  # spawned workers read it at import
+  import europe_ble as eb
   year = int(os.environ.get('YEAR', eb.T0.year))  # follows WIND_GRID's epoch unless overridden
   starts = [dt.datetime(year, m, d, 6, tzinfo=dt.timezone.utc)
             for m in range(1, 13) for d in (1, 15)]
@@ -222,6 +233,8 @@ def main():
   out = 'results/drift_quick.csv' if quick else f'results/drift_{year}.csv'
   if ctrls != CONTROLLERS:
     out = out.replace('.csv', '_' + '_'.join(ctrls) + '.csv')
+  if VEHICLE:
+    out = out.replace('.csv', f'_{VEHICLE}.csv')
   t, rows = time.time(), []
   with mp.get_context('spawn').Pool(8) as pool:
     for k, r in enumerate(pool.imap_unordered(fly, jobs)):

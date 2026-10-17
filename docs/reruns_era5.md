@@ -1,8 +1,10 @@
 # Runbook: the ERA5 reruns
 
-*2026-10-17. For whoever runs the simulations on the machine that has the engine. The nine reruns are listed in `results/mitigation_research.md` in the order they pay; this file says, for each one, what exists in the repository today, the exact command, what it writes, and what number it changes. Three of the nine can be run now. The rest need code that is specified here and not yet written.*
+*2026-10-17. For whoever runs the simulations on the machine that has the engine. The nine reruns are listed in `results/mitigation_research.md` in the order they pay; this file says, for each one, what exists in the repository today, the exact command, what it writes, and what number it changes. Reruns 1, 2, 3 and 5 run now. Reruns 4 (light vehicle and winter power), 6, 7 and 9 have their scripts written and tested on synthetic inputs; none has yet run on the engine or on real tracks, and the light vehicle has not flown. Rerun 8 still needs data and code.*
 
 ## 0. Before anything
+
+Tests for the scripts of reruns 4, 6, 7 and 9 run without the engine on synthetic inputs: `uv pip install -p .venv pytest && .venv/bin/python -m pytest tests` (or `python tests/test_<name>.py` one by one). They check the arithmetic, not the physics; the physics still needs the flights listed under rerun 4.
 
 ```bash
 cd loon && git pull
@@ -68,7 +70,7 @@ PYTHONWARNINGS=ignore .venv/bin/python -I forecast_release.py  # results/forecas
 
 Both scripts replay the 120 stored slow-controller tracks from 2025 (`results/slow_tracks.csv`), so they are valid for 2025 only; other years need rerun 4 first. The number that changes: the 98.3 % recovery ceiling and the 1.98-day forecast-release dwell. Expect the headline near the site-network ceiling; expect the terminal phase (last 3 km) to be where ERA5's finer winds bite. The W10 0.25° file is for a separate descent-only study: no script exists for it yet; the specification is one Monte Carlo of parachute and parafoil descents from 150 hPa over the W10 box with the full column, reporting landing-ellipse radius against release altitude, and it belongs with the recovery decision in `results/mitigation_research.md`.
 
-## 4. Re-fly the drift set per year, and winter power (W3, W5) — drift runs now, power needs code
+## 4. Re-fly the drift set per year, and winter power (W3, W5) — drift runs now; light vehicle and power written, untested on the engine
 
 ```bash
 for y in 2019 2021 2024 2025; do
@@ -80,7 +82,23 @@ done
 
 `WIND_GRID` moves the whole run to that year: the grid, the epoch and the launch dates. The number that changes: mean dwell 5.4 days (and the winter 1.3–1.9 days) becomes a distribution across years, which is what the cost model should use instead of one year.
 
-The light vehicle (W3) is not in the code. BLE's balloon mass, envelope volume and solar array live in `balloon_learning_environment.env.balloon.balloon` and `stable_init`; the light-vehicle rerun needs a subclass with the 40 kg payload, the 16–18 kg envelope from `results/envelope_cost.md` and the array area from the power budget, and `run_drift.py` to accept it as a flag. The power rerun (W5) needs `analyze_power.py` to take a latitude and a date for irradiance instead of BLE's solar model. Both are half a day of work each for someone with the engine running and are the right first coding task after the ingest.
+The light vehicle (W3) is in `vehicle.py` and has not flown. `vehicle.size()` derives what BLE needs from the envelope note's inputs (40 kg payload, 18 kg envelope, 60 hPa ceiling, 5 % spare lift, 1,000 Pa design superpressure, hydrogen): 2,268 mol of H₂ (4.6 kg) and a 676 m³ envelope, against the note's 678 m³; `vehicle.apply()` writes those into the BLE balloon state after the arena is built, re-runs `stable_init`, sets the lift-gas molar mass to hydrogen, scales the pump and the array, and `run_drift.py --vehicle light` (also `track_slow.py --vehicle light`) calls it and writes `results/drift_<year>_light.csv`. The sizing is tested (`tests/test_vehicle.py`); the flight is not, and the module docstring lists what the first engine run must check, in order: whether the vehicle survives its first sunset and sunrise at 1,000 Pa in BLE's thermal model (raise `dp_max_pa` if it bursts and record the rating), the launch pressure, the pump and array scaling assumptions, then the re-fly. The hydrogen correction is a monkeypatch of `constants.HE_MOLAR_MASS` in the worker process; confirm no other module caches it.
+
+```bash
+python -I vehicle.py                                              # sizing table, no engine
+WIND_GRID=data/era5_europe_upper_2025.npz PYTHONWARNINGS=ignore .venv/bin/python -I run_drift.py --vehicle light
+WIND_GRID=data/era5_europe_upper_2025.npz PYTHONWARNINGS=ignore .venv/bin/python -I track_slow.py --vehicle light --procs 8
+```
+
+The power rerun (W5) is `winter_power.py`, a sibling of `analyze_power.py` (which still reads the multipass runs). It takes latitude, date, float pressure, array model and area, hotel loads and the battery, and computes the day from the sun's geometry with BLE's own attenuation and, for `--array loon`, BLE's exact six-panel array, so it ties back to the multipass runs; it writes `results/winter_power_budget_<tag>.csv` with day and night length, harvest, surplus, the night's need, whether the day closes the night, the largest night load the array carries, and the battery and array mass against the 40 kg payload. What it already says, with no engine: at 50 °N on 15 January at 60 hPa the night is 14.7 h; BLE's own array (1,042 W peak, 8.0 kWh harvested) leaves a 6.9 kWh surplus against a 2.7 kWh night at BLE's 184 W, but BLE's 3 kWh battery at 80 % depth cannot hold that night, which is why the 3 kWh flights in `results/winter_power_summary.csv` died at 1.8 days; and a 300 W night on the light vehicle needs 4.4 kWh, a 37 kg pack at 150 Wh/kg, which is the whole payload (W5). Cloud, frost and gondola attitude are not modelled; every mass and efficiency is a labelled ASSUMPTION.
+
+```bash
+python winter_power.py --vehicle light --array tilt --sweep-area 2,4,8 --night-w 300 --lat 50 --monthly 2025
+python winter_power.py --vehicle loon --array loon --lat 50 --monthly 2025          # BLE's array, for the tie-back
+python -m pytest tests/test_vehicle.py tests/test_winter_power.py
+```
+
+The runbook's track files: `track_slow.py` now follows `WIND_GRID`/`YEAR` and writes `results/slow_tracks_<year>.csv` (plus `_summary`), which reruns 6 and 7 replay; the 2025 GFS run keeps its original name `results/slow_tracks.csv`. Run it for each year after `run_drift.py`, since the per-flight drift file has no hourly positions.
 
 ## 5. The outage scenario at Loon-class capacity (W11, W23) — runs now
 
@@ -90,21 +108,47 @@ BALLOON_GBPS=0.04,0.2,0.5 .venv/bin/python -I outage_scenario.py   # results/out
 
 The number that changes: 254 balloons and 443 launches a day for the 300 km winter voice-and-text zone were computed at 2 Gbps a balloon; at 0.2 Gbps the balloon count is set by capacity rather than by cell geometry, and the launch rate scales with it. Then do the W23 arithmetic by hand from the new launches-per-day column: at 6–12 launches a site a day, sites needed = launches ÷ 6 and ÷ 12. That is the honest surge geometry until `surge_dispatch.py` exists (specification below).
 
-## 6. Availability on population cells and time to N balloons (W24, W25) — needs code
+## 6. Availability on population cells and time to N balloons (W24, W25) — written, needs the tracks and a raster
 
-Not written. Specification for `availability.py`: inputs are the per-year track files from rerun 4 (positions each hour), a population raster (GHSL GHS-POP 2025 at 1 km or Eurostat GEOSTAT 1 km grid, downloaded by the operator), a launch schedule (launches per site per day, from `outage_scenario` or a standing-layer count) and a service radius (40, 80, 194 km). For every hour, place every balloon aloft under the schedule on its track, mark the population cells within the radius, split each balloon's capacity across its cells, and record per cell whether it is served. Outputs: population-weighted availability by month, the distribution of outage durations per cell, and winter separated, per year. The time-to-N replay (W24) is the same loop started from a cold start or from 50 or 100 balloons already aloft at random track positions, reporting hours to 10, 50 and 90 % of the required balloon count over each candidate zone. These two replace the random-placement branch in `cost_model.py` and are the biggest single change to a published number ("95 % coverage"); they are a one-to-two-day coding task once rerun 4's tracks exist.
+`availability.py` does this, on top of `replay.py` (shared with rerun 7), and is tested on synthetic tracks and a synthetic population (`tests/test_replay.py`, `tests/test_availability.py`). Inputs: the track file(s) from `track_slow.py`, a population file the operator downloads (GHSL GHS-POP GeoTIFF with `rasterio`, a GEOSTAT CSV with `pyproj`, or any `lat,lon,pop` CSV; aggregated to `--cell-km`, default 10 km), a schedule (`--launches-per-day` from the `launches_day` column of rerun 5, or `--standing N` for a layer held at N by Little's law each month), the radii, `--balloon-gbps` (default 0.2) and `--mbps-per-person` (0.015 voice and text, 0.05 degraded data, as in `outage_scenario.py`). Service ends at exit, or at the release hour with `--drift results/drift_<year>.csv`. Each launch flies a stored track of the same site launched within three weeks of it, so the replay keeps site and season but not the day's weather; balloons launched in the same fortnight share a few tracks, which clusters them more than reality and is the conservative direction. Each hour, each balloon's capacity is split over the cells in its disc by population; a cell is covered if any disc reaches it and served if the capacity it receives meets its demand.
 
-## 7. Mesh connectivity on the tracks (W15) — needs code
+```bash
+.venv/bin/python track_slow.py --procs 8                                      # 2025 tracks if not present
+# population: e.g. GHS_POP_E2025_GLOBE_R2023A_54009_1000_V1_0.tif from the GHSL download page, or the GEOSTAT 1 km CSV
+.venv/bin/python availability.py --tracks results/slow_tracks.csv --pop data/ghs_pop_2025_1km.tif \
+    --standing 100 --radius-km 40,80,194 --drift results/drift_2025.csv --time-to-n
+.venv/bin/python availability.py --tracks results/slow_tracks.csv --pop data/ghs_pop_2025_1km.tif \
+    --launches-per-day 443 --radius-km 80 --balloon-gbps 0.2
+for y in 2019 2021 2024; do .venv/bin/python availability.py --tracks results/slow_tracks_$y.csv --pop data/ghs_pop_2025_1km.tif --standing 100 --drift results/drift_$y.csv; done
+```
 
-Specification: for every hour of the availability replay, build the graph of balloons aloft with edges at 500 km and at 700 km, add gateway sites as nodes with a 200 km ground radius, and report the share of balloons connected to at least one gateway, the largest connected component, and the number of balloons whose only path is longer than four hops. Weather-correlated gateway loss: remove every gateway inside a storm box for a day and repeat. Output a table by month and by standing-layer size (25, 50, 100). Half a day on top of rerun 6.
+Writes `results/availability_<tag>.csv` (by radius and month, plus DJF, JJA and the year: population-weighted covered and served shares, mean aloft, launches a day), `_outages.csv` (population-weighted outage-duration tails by season of onset, for coverage and for capacity, with p50 and p90), `_cells.csv` (per cell, for a map) and, with `--time-to-n`, `results/time_to_n_<tag>.csv`: for the 21 recovery stations as candidate zone centres (or `--zones` CSV) and a start every day of the year, hours from a cold start and from 50 or 100 balloons already aloft at random track positions to 10, 50 and 90 % of the zone's requirement (its population from the raster at the given demand and capacity, floored at one balloon per `--footprint-km` disc), launching at `--surge-per-site-day` (default 12, W23) from every site, with the share of starts that never got there within a week. On synthetic data the capacity rows already show the shape to expect: at 0.2 Gbps a balloon a standing layer of 100 covers people but serves almost none of them, and no 300 km zone reaches its requirement in 72 hours; use `--n-required` to ask the time-to-N question for a fixed balloon count instead. The number that changes: "95 % coverage" becomes a served share by month with a winter row, per year, and the cost model's random-placement branch is replaced by `served_pop_share` (the ledger in section 9 reads it).
+
+## 7. Mesh connectivity on the tracks (W15) — written, needs the tracks
+
+`mesh_connectivity.py` does this on the same replay (`tests/test_mesh.py` checks the graph metrics on a hand-placed chain and the replay on synthetic tracks). Every `--every-h` hours (default 6) it builds the graph of balloons aloft under a standing layer of 25, 50 and 100, with balloon-balloon edges at 500 and 700 km and balloon-gateway edges within 200 km of a gateway (default: the 21 recovery stations; `--gateways` CSV or `--gateway-grid-km 350` for the sixty-site grid of `target_population.md`), and reports by month, DJF, JJA and year: share of balloons with a path to a gateway, largest balloon-only component as a share of aloft, share more than four hops from any gateway (or unconnected), isolated share and mean degree. `--storm-box 44,56,-12,8` (default) removes every gateway in the box and evaluates the same hours again, so each row comes as `gateways=all` and `gateways=storm`. On synthetic eastward tracks the random-geometric estimates of `target_population.md` section F reproduce: 25 balloons fragment at 500 km and hold together at 700 km, 100 are connected at either range.
+
+```bash
+.venv/bin/python mesh_connectivity.py --tracks results/slow_tracks.csv --standing 25,50,100 --every-h 6
+for y in 2019 2021 2024; do .venv/bin/python mesh_connectivity.py --tracks results/slow_tracks_$y.csv --standing 25,50,100; done
+```
+
+Writes `results/mesh_<tag>.csv`. Routing capacity, acquisition time and the number of terminals a balloon carries (its mesh degree) are not modelled; the number that changes is the mesh floor, 50 balloons at 500 km in the note, measured on real winter chains and summer scatter rather than random placement.
 
 ## 8. Border and FIR tagging, and envelope mass flow (W20, W21) — needs data and code
 
 For the border tagging: download the Eurocontrol or OpenAIP FIR boundaries, tag every hourly track position with its FIR and whether the state has authorised overflight (a table the operator fills in), and report hours per flight in unauthorised airspace and the share of flights that cross a border before their forecast termination point. For the mass flow: `cost_comparison.md`'s envelope mass per year at three recovery rates (full land recovery, a third at sea, zero) is arithmetic from the launch counts of reruns 5 and 6 and the envelope mass in `results/envelope_cost.md`; it needs no simulation, only the new launch counts.
 
-## 9. The scenario ledger (W27) — needs code
+## 9. The scenario ledger (W27) — written, reads whatever reruns 4–7 have produced
 
-One table per scenario (planning case, readiness, pilot) that ties launches per day, inventory and circulation time of payloads, envelope mass, delivered capacity and cost per year together, each row traceable to the result file it came from. The €0.2–0.5 B readiness figure is withdrawn until this exists. It is a spreadsheet-sized Python script over the CSVs of reruns 4–7 and should be the last thing written, not the first.
+`scenario_ledger.py` writes `results/scenario_ledger.csv` (scenario, metric, value, unit, source) and `results/scenario_ledger.md`, one table per scenario (pilot from `deployable_now.md` Configuration B; readiness as a standing layer of `--standing` plus one `--surge-days` surge a year to the `outage_scenario` row for a `--zone-km` winter voice-and-text zone at `--gbps`; planning as the 95 % random-placement layer at `--footprint-km`). It reads `results/drift_<year>.csv` for service dwell (release where recovered) by month and the recovery share, the rerun 5 CSV for the surge balloons and launches a day, and, when present, `results/availability_*.csv` (served share, matched by `standing<N>` in the tag), `results/mesh_*.csv` and `results/time_to_n_*.csv`; everything else is a constant in `CONSTANTS` with its source. Per scenario: launches a day standing and surge, flights a year, sites at 12 launches a site a day, payload circulation (service dwell plus `--turnaround-days`) and inventory by Little's law on the peak rate, payloads consumed, envelope stock for the surge, envelope mass launched and unrecovered at three recovery rates (all recovered, a third at sea, none), gross and delivered capacity, and cost a year in four lines with a low and high per-flight case. `tests/test_ledger.py` runs it on a synthetic `results/` folder.
+
+```bash
+.venv/bin/python scenario_ledger.py --year 2025 --gbps 0.2 --standing 100 --zone-km 300 --surge-days 30
+.venv/bin/python scenario_ledger.py --year 2019 --standing 50 --turnaround-days 7
+```
+
+The number that changes: the withdrawn €0.2–0.5 B readiness figure gets an arithmetic with named inputs; expect the payload inventory (surge launches a day times circulation days) and the sites to be the lines that move it, as the W27 reviewers said.
 
 ## Reporting back
 

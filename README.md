@@ -63,6 +63,7 @@ Regenerate with `fetch.py` (throttled for the free tier, ~40 min).
 ## Reruns and requests
 
 - `docs/reruns_era5.md`: the runbook for the nine reruns in `results/mitigation_research.md`: what runs now (`fetch_era5.py`, `shear_hist.py`, `outage_scenario.py` with `BALLOON_GBPS`, `jet_test.py` and `forecast_release.py` on ERA5 for 2025, `run_drift.py` per year with `WIND_GRID`), what still needs code, and what each rerun changes (2026-10-17).
+- Scripts for reruns 4, 6, 7 and 9, written against the result-file layouts and tested on synthetic inputs in `tests/` (not yet run on the engine): `vehicle.py` and `run_drift.py --vehicle light` (the costed light vehicle, W3), `winter_power.py` (irradiance budget by latitude and date, W5), `replay.py`, `availability.py` (population-weighted availability and time to N balloons, W24, W25), `mesh_connectivity.py` (W15), `scenario_ledger.py` (W27). Commands and outputs in `docs/reruns_era5.md`.
 - `docs/rfq_flight_service.md`: the request for information to send to Aerostar and World View for the pilot in `results/deployable_now.md`: configuration, payload mass and power, winter heritage, operations, export control, budgetary price and the upgrade path (2026-10-17).
 - `results/shear_gfs_2025_{djf,jja,am}.csv`: winter, summer and spring directional-shear histograms at 45–55°N from `shear_hist.py` on the 2025 GFS file. Winter: median spread across 150–30 hPa 31°, slowest level 13 m/s eastward 93 % of the time, perfect-controller crossing 2.4 days. Summer: spread 152°, slowest level 2.7 m/s, 12 days.
 
