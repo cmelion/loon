@@ -58,6 +58,7 @@ THRUST_POWER_W = 0.5 * RHO_20KM * CD * AREA_M2 * THRUST_MS ** 3 / ETA
 # the propeller draw its power from the battery (on by default with a fuel cell).
 # BLE books the lift gas as helium, so the mass removed per mol is corrected to H2.
 FUEL_CELL = os.environ.get('FUEL_CELL')
+VEHICLE = os.environ.get('VEHICLE') or None  # vehicle.py preset applied after the arena is built
 FC_MAX_W, FC_KWH_PER_KG = 400.0, 16.7
 FC_TARGET = float(os.environ.get('FC_TARGET', 0.5))  # top-up level; 0.5 keeps the night pumping limit in force
 TANK_KG = float(os.environ.get('TANK_KG', 10))
@@ -114,6 +115,9 @@ def fly(job):
   wf.get_ground_truth = pushed
   arena = eb.EuropeArena(wf, start, seed, feature_factory=NullFeatures,
                          launch_radius_km=10.0)
+  if VEHICLE:
+    import vehicle
+    vehicle.apply(arena, VEHICLE)  # 'heavy' (class M) or 'light'; TODO(flight): see vehicle.py
   if BATTERY_WH:
     st = arena.get_balloon_state()
     st.battery_capacity = units.Energy(watt_hours=BATTERY_WH)

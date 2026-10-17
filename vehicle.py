@@ -105,7 +105,19 @@ class VehicleSpec:
 # results/envelope_cost.md section 4: 30-day design 18 kg / 678 m^3; 4-day 16.3 kg / 661 m^3.
 LIGHT = VehicleSpec('light', payload_kg=40.0, envelope_kg=18.0)
 LIGHT4 = VehicleSpec('light4', payload_kg=40.0, envelope_kg=16.3)
-PRESETS = {'light': LIGHT, 'light4': LIGHT4}
+# The class M vehicle of results/radio_and_backhaul.md and results/deployable_now.md:
+# a 90-100 kg payload (1.6-2 m array, 40-70 beams, 0.5-1.5 kW by day), on the proven
+# heavier film (W4: carry it in the cost case) at Loon's 2,380 Pa, hydrogen-lifted so
+# a fuel cell can draw on the lift gas at night (run_multipass.py FUEL_CELL=vent).
+# Every number below is an ASSUMPTION to be replaced by the payload budget:
+#   envelope 60 kg (BLE's 68.5 kg film scaled to the smaller hydrogen volume),
+#   array 3,000 Wp (about 12-15 kg at 200-250 W/kg), battery 3,000 Wh (the night is
+#   the fuel cell's job), day load 1,000 W, night load 300 W (reduced night service).
+# In mass this is BLE's own balloon, so the existing tracks already describe its
+# dwell; what --vehicle heavy adds is the power and end-mode behaviour.
+HEAVY = VehicleSpec('heavy', payload_kg=100.0, envelope_kg=60.0, dp_max_pa=2380.0,
+                    battery_wh=3000.0, array_wp=3000.0, day_w=1000.0, night_w=300.0)
+PRESETS = {'light': LIGHT, 'light4': LIGHT4, 'heavy': HEAVY}
 
 
 def size(spec):

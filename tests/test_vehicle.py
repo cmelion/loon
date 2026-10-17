@@ -60,3 +60,14 @@ if __name__ == '__main__':
   for name, fn in list(globals().items()):
     if name.startswith('test_'):
       fn(); print('ok', name)
+
+
+def test_heavy_vehicle_is_ble_mass_class_with_class_m_power():
+  d = vehicle.size(vehicle.HEAVY)
+  # the same mass class as BLE's balloon: the envelope sizes to within 10 % of BLE's 1,804 m^3
+  assert 0.9 < d['volume_m3'] / vehicle.BLE['volume_m3'] < 1.1, d['volume_m3']
+  assert 0.9 < d['acs_scale'] < 1.1, d['acs_scale']
+  assert d['dp_max_pa'] == 2380.0
+  assert d['day_w'] == 1000.0 and d['night_w'] == 300.0
+  assert 2.0 < d['array_scale'] < 2.6
+  assert 8.0 < d['gas_kg'] < 14.0, d['gas_kg']

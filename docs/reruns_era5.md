@@ -38,6 +38,23 @@ Volume: band 1° about 1.4 GB a year, europe 1° about 0.7 GB a year, both compo
 
 Writes `data/era5_band_<year>.npz`, `data/era5_europe_<year>.npz`, `data/era5_europe_upper_<year>.npz`, none committed (add `data/era5_*` to `.gitignore` if it is not there).
 
+## 1b. Putting the wind data in the repository
+
+The data belong with the code, and GitHub refuses any file over 100 MB in a commit, so the ERA5 files go up as release assets rather than tracked files (`data/era5_*` stays in `.gitignore`). One release holds them all, one asset per product and year; GitHub allows 2 GB per asset. From the machine that fetched them:
+
+```bash
+gh release create data-era5 --repo cmelion/loon --title "ERA5 wind files" --notes "WindGrid npz files from fetch_era5.py; see docs/reruns_era5.md" || true
+gh release upload data-era5 data/era5_*.npz --repo cmelion/loon --clobber
+```
+
+and on any other machine:
+
+```bash
+gh release download data-era5 --repo cmelion/loon --dir data --pattern 'era5_*_2025.npz'
+```
+
+The `--pattern` picks the years wanted. The NCEP files (`ncep_band_2025.npz`, `ncep_europe_full_2025.npz`, `ncep_europe_upper_2025.npz`) can go up the same way under a `data-ncep` release so the 2025 comparison is reproducible without NOAA downloads. Record the release tag and the file's `t0` and shape in the rerun's paragraph when a result is reported.
+
 ## 2. Winter shear and the perfect-controller ceiling (W1) — runs now
 
 ```bash
@@ -80,7 +97,17 @@ done
 .venv/bin/python analyze_drift.py   # reads results/drift_2025.csv; point it at each year's file or loop by hand
 ```
 
-`WIND_GRID` moves the whole run to that year: the grid, the epoch and the launch dates. The number that changes: mean dwell 5.4 days (and the winter 1.3–1.9 days) becomes a distribution across years, which is what the cost model should use instead of one year.
+`WIND_GRID` moves the whole run to that year: the grid, the epoch and the launch dates. `LAUNCH_SET=nordic` flies Copenhagen, Gothenburg, Riga and Tallinn instead of the five western and central sites (`LAUNCH_SET=all` flies both sets), writing `results/drift_<year>_nordic.csv`; these were never run, winter should carry them out of the region within a day and summer should make them the best sites, and the per-month dwell by site is the number to report. The number that changes: mean dwell 5.4 days (and the winter 1.3–1.9 days) becomes a distribution across years, which is what the cost model should use instead of one year.
+
+**The heavy vehicle (class M) needs no new dwell run.** In mass it is the simulator's own balloon: `vehicle.py`'s `heavy` preset (100 kg payload, 60 kg envelope, hydrogen, Loon's 2,380 Pa film) sizes to 1,864 m³ against BLE's 1,804, so every track in `results/` already describes its drift and dwell. What it changes is power: 1,000 W by day, 300 W at night for a reduced service, a 3,000 Wp array and a fuel cell on the lift gas for the rest of the night, all labelled assumptions in the preset. Run:
+
+```bash
+VEHICLE=heavy PYTHONWARNINGS=ignore .venv/bin/python -I run_drift.py                      # end modes and dwell under the class M loads; writes results/drift_<year>_heavy.csv
+VEHICLE=heavy WINTER=1 MAX_DAYS=60 FUEL_CELL=vent PYTHONWARNINGS=ignore .venv/bin/python -I run_multipass.py   # winter nights on the lift gas; rename the multipass_2025*.jsonl it writes with a _heavy tag
+.venv/bin/python winter_power.py --vehicle heavy --array tilt --area-m2 14 --lat 50 --dates 2025-01-15,2025-06-15   # the day budget by hand; 14 m² is about 3 kWp at 22 %
+```
+
+The numbers to report: how many January nights the class M loads survive before the fuel cell has burned 7–16 % of the lift gas, and whether a 3 kWp array closes the day at 50°N in January. Those are the phase 3 gate in `results/deployable_now.md`.
 
 The light vehicle (W3) is in `vehicle.py` and has not flown. `vehicle.size()` derives what BLE needs from the envelope note's inputs (40 kg payload, 18 kg envelope, 60 hPa ceiling, 5 % spare lift, 1,000 Pa design superpressure, hydrogen): 2,268 mol of H₂ (4.6 kg) and a 676 m³ envelope, against the note's 678 m³; `vehicle.apply()` writes those into the BLE balloon state after the arena is built, re-runs `stable_init`, sets the lift-gas molar mass to hydrogen, scales the pump and the array, and `run_drift.py --vehicle light` (also `track_slow.py --vehicle light`) calls it and writes `results/drift_<year>_light.csv`. The sizing is tested (`tests/test_vehicle.py`); the flight is not, and the module docstring lists what the first engine run must check, in order: whether the vehicle survives its first sunset and sunrise at 1,000 Pa in BLE's thermal model (raise `dp_max_pa` if it bursts and record the rating), the launch pressure, the pump and array scaling assumptions, then the re-fly. The hydrogen correction is a monkeypatch of `constants.HE_MOLAR_MASS` in the worker process; confirm no other module caches it.
 

@@ -56,6 +56,10 @@ STEP_MIN = 3
 VEHICLES = {
     'loon': dict(payload_kg=92.5, day_w=120.4, night_w=183.7, battery_wh=3058.56, array='loon'),
     'light': dict(payload_kg=40.0, day_w=300.0, night_w=300.0, battery_wh=None, array='tilt'),
+    # class M (results/radio_and_backhaul.md, results/deployable_now.md): 1 kW by day for the
+    # array and radio, 300 W reduced night service, 3 kWh battery with the fuel cell for the
+    # rest of the night; ASSUMPTIONS, matched to vehicle.HEAVY. Use --area-m2 for the solar array.
+    'heavy': dict(payload_kg=100.0, day_w=1000.0, night_w=300.0, battery_wh=3000.0, array='tilt'),
 }
 
 

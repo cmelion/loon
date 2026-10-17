@@ -33,6 +33,16 @@ REGION = dict(lat0=36.0, lat1=59.5, lon0=-10.0, lon1=42.0)  # 59.5: BLE solar li
 CENTRE = (47.5, 16.0)
 LAUNCH = {'Lisbon': (38.7, -9.1), 'Brest': (48.4, -4.5), 'Dublin': (53.3, -6.3),
           'Vienna': (48.2, 16.4), 'Bucharest': (44.4, 26.1)}
+# Opt-in northern and eastern sites, all under BLE's 60N solar limit. In winter the
+# stratosphere carries a Baltic launch east out of the region within a day; in summer
+# the band reverses and these become the upwind edge. LAUNCH_SET=nordic flies them
+# instead of the five above; LAUNCH_SET=all flies both sets.
+NORDIC = {'Copenhagen': (55.7, 12.6), 'Gothenburg': (57.7, 12.0), 'Riga': (56.9, 24.1), 'Tallinn': (59.4, 24.7)}
+_set = os.environ.get('LAUNCH_SET', '')
+if _set == 'nordic':
+  LAUNCH = NORDIC
+elif _set == 'all':
+  LAUNCH = {**LAUNCH, **NORDIC}
 from run_coverage import STATIONS
 # Recovery network: the coverage stations on land (21 sites incl. Black Sea coast).
 RECOVERY = {k: v for k, v in STATIONS.items() if k != 'Black Sea (mid)'}
@@ -230,7 +240,7 @@ def main():
           for i, (n, (la, lo)) in enumerate(sites)
           for j, st in enumerate(starts) for k in ctrls]
   os.makedirs('results', exist_ok=True)
-  out = 'results/drift_quick.csv' if quick else f'results/drift_{year}.csv'
+  out = 'results/drift_quick.csv' if quick else f'results/drift_{year}{"_" + _set if _set else ""}.csv'
   if ctrls != CONTROLLERS:
     out = out.replace('.csv', '_' + '_'.join(ctrls) + '.csv')
   if VEHICLE:
