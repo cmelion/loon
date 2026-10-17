@@ -52,6 +52,7 @@ Regenerate with `fetch.py` (throttled for the free tier, ~40 min).
 
 - `medium/review.md`: internal fact-check of the Medium draft against `results/` (2026-10-17).
 - `medium/panel_review.md`: external five-model review of the same draft, with the reruns it asks for (2026-10-17). Headline: the physics holds; €3.4 B/yr, 98 % recovery and 5.4-day dwell do not survive as findings until the forecast-only glider release, the redesigned vehicle and full-column descent winds are in the runs.
+- `results/cost_funding_vs_starlink.md`: cost per person, four ways of pricing equivalent Starlink bandwidth, terminal and refresh costs, funding models (permanent layer vs readiness), and the utility/shortfall lists against Starlink (2026-10-17).
 
 ## Modelling caveats
 
