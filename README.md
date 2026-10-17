@@ -25,6 +25,7 @@ Black Sea.
 | Fuel cell + propulsion, China routing | `run_multipass.py` (BATTERY_WH, THRUST_MS) | 10 kWh store: launches ×0.53/0.41/0.32 at 30/60/100-day life. + 3 m/s latitude hold: China reach 100% → 88%, time over China 6% → 2%, launches ×0.49/0.37/0.30, but polar excursions persist and propulsion uses ~52 kWh (~3 kg H₂) per 30 days. |
 | Western Canada launches | `run_multipass.py` (LAUNCH_SET=canada) | 60-day flights from BC/Alberta: 4.8 d over Canada, 4.5 d Atlantic, 12.6 d Europe; useful time 46% vs 26% Europe-only; all reach Europe (day ~10). |
 | Regional ground-network loss | `outage_scenario.py` → `results/outage_scenario.csv` | 300 km zone (34 M people) without towers: voice/text needs ~250 balloons, 141 launches/day summer (€1.8 M/day) to 443 winter (€5.5 M/day); degraded data 1.7 Tbps vs Starlink's ~0.55 Tbps pro-rata in the zone. |
+| Winter power: battery vs fuel cell on the lift gas | `run_multipass.py` (FUEL_CELL=vent/retain, WINTER=1), `analyze_power.py` | 20 Nov–Feb launches per setup, 60-day cap, propeller power charged: median survival 1.8 d (3 kWh), 8.9 d (10 kWh), 13.2 d (fuel cell, water vented), 9.9 d (water kept). Fuel-cell flights all end when 7–16% of the lift gas (0.9–2.3 kg H2) is burned and the envelope loses pressure; kept water only adds mass against the same margin. |
 
 Charts and per-flight CSVs are in `results/`.
 

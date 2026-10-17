@@ -50,6 +50,19 @@ BATTERY_WH = float(os.environ.get('BATTERY_WH', 0)) or None
 THRUST_MS = float(os.environ.get('THRUST_MS', 0))
 RHO_20KM, CD, AREA_M2, ETA = 0.089, 0.4, 177.0, 0.6
 THRUST_POWER_W = 0.5 * RHO_20KM * CD * AREA_M2 * THRUST_MS ** 3 / ETA
+# Fuel cell on the lift gas (env FUEL_CELL=vent|retain). Whenever the battery
+# is below FC_TARGET it is topped up at up to FC_MAX_W, burning hydrogen out of
+# the envelope at 50% efficiency (16.7 kWh electric per kg). Product water
+# (9 kg per kg H2, 8 kg of it oxygen from the air) is vented as vapour, or kept
+# as ballast in a tank of TANK_KG and vented once full. CHARGE_THRUST=1 makes
+# the propeller draw its power from the battery (on by default with a fuel cell).
+# BLE books the lift gas as helium, so the mass removed per mol is corrected to H2.
+FUEL_CELL = os.environ.get('FUEL_CELL')
+FC_MAX_W, FC_KWH_PER_KG = 400.0, 16.7
+FC_TARGET = float(os.environ.get('FC_TARGET', 0.5))  # top-up level; 0.5 keeps the night pumping limit in force
+TANK_KG = float(os.environ.get('TANK_KG', 10))
+CHARGE_THRUST = os.environ.get('CHARGE_THRUST', '1' if FUEL_CELL else '0') == '1'
+WINTER = os.environ.get('WINTER') == '1'
 POWER_FLOOR = 0.45   # never pump below this battery fraction
 NIGHT_FLOOR = 0.80   # at night only pump with plenty in hand
 
@@ -106,6 +119,9 @@ def fly(job):
     st.battery_capacity = units.Energy(watt_hours=BATTERY_WH)
     st.battery_charge = units.Energy(watt_hours=0.95 * BATTERY_WH)
   thrust_steps, china_first, max_lat = 0, None, lat0
+  h2_kg, tank_kg, vented_kg = 0.0, 0.0, 0.0
+  gas0 = None
+  min_sp, max_p, polar_steps, dark_steps = 1e9, 0.0, 0, 0
   target, steps, end = None, 0, 'MAX_DAYS'
   eu_steps, passes, was_in = 0, 0, False
   lon_travel, prev_lon = 0.0, lon0
@@ -124,7 +140,11 @@ def fly(job):
       s.x, s.y = units.Distance(m=0.0), units.Distance(m=0.0)
       wf.lat0, wf.lon0 = lat, lon
     if steps % DECIDE_EVERY == 0:
-      pr = pressure_range_builder.get_pressure_range(s, arena._atmosphere)
+      try:
+        pr = pressure_range_builder.get_pressure_range(s, arena._atmosphere)
+      except ValueError:  # BLE finds no altitude the envelope can safely hold
+        end = 'NO_SAFE_ALTITUDE'
+        break
       target = choose(wf, s, pr, target, lat)
       if THRUST_MS:  # two-way latitude hold inside the (corridor) band
         lo, hi = LAT_LO, LAT_HI
@@ -143,6 +163,25 @@ def fly(job):
       action = control.AltitudeControlCommand.DOWN
     else:
       action = control.AltitudeControlCommand.STAY
+    dt_h = STEP_MIN / 60
+    if CHARGE_THRUST and wf.thrust_v:
+      s.battery_charge = units.Energy(watt_hours=max(
+          0.0, s.battery_charge.watt_hours - THRUST_POWER_W * dt_h))
+    if FUEL_CELL:
+      want = FC_TARGET * s.battery_capacity.watt_hours - s.battery_charge.watt_hours
+      if want > 0:
+        e_wh = min(want, FC_MAX_W * dt_h)
+        kg = e_wh / 1000 / FC_KWH_PER_KG
+        mol = kg / 0.002016
+        s.battery_charge = units.Energy(watt_hours=s.battery_charge.watt_hours + e_wh)
+        s.mols_lift_gas -= mol
+        s.payload_mass += mol * (0.004002602 - 0.002016)  # He-booked mass -> H2
+        h2_kg += kg
+        water = 9 * kg
+        keep = min(water, TANK_KG - tank_kg) if FUEL_CELL == 'retain' else 0.0
+        tank_kg += keep
+        s.payload_mass += keep
+        vented_kg += water - keep
     try:
       arena.step(action)
     except AssertionError:
@@ -155,6 +194,12 @@ def fly(job):
       break
     lat, lon = s.latlng.lat().degrees, s.latlng.lng().degrees
     max_lat = max(max_lat, lat)
+    if gas0 is None:
+      gas0 = s.mols_lift_gas + h2_kg / 0.002016
+    min_sp = min(min_sp, s.superpressure)
+    max_p = max(max_p, s.pressure)
+    polar_steps += lat > 66.5
+    dark_steps += s.solar_charging.watts <= 0
     if lat < 20.0:
       end = 'SOUTH_20N'
       break
@@ -195,12 +240,17 @@ def fly(job):
               thrust_h=round(thrust_steps * STEP_MIN / 60, 1),
               thrust_kwh=round(thrust_steps * STEP_MIN / 60 * THRUST_POWER_W / 1000, 1),
               sector_days={k: round(v * STEP_MIN / 1440, 2) for k, v in sector_steps.items()},
+              h2_kg=round(h2_kg, 2), gas_used_frac=round(h2_kg / 0.002016 / gas0, 3) if gas0 else 0,
+              water_tank_kg=round(tank_kg, 1), water_vented_kg=round(vented_kg, 1),
+              min_superpressure_pa=round(min_sp, 0), max_pressure_hpa=round(max_p / 100, 1),
+              polar_h=round(polar_steps * STEP_MIN / 60, 1), dark_h=round(dark_steps * STEP_MIN / 60, 1),
               recover_days=recover_days)
 
 
 def main():
   quick = '--quick' in sys.argv
-  starts = [dt.datetime(2025, m, 1, 6, tzinfo=dt.timezone.utc) for m in range(1, 13)]
+  months = (11, 12, 1, 2) if WINTER else range(1, 13)
+  starts = [dt.datetime(2025, m, 1, 6, tzinfo=dt.timezone.utc) for m in months]
   sites = list(LAUNCH.items())
   if os.environ.get('LAUNCH_SET') == 'canada':
     sites = list(CANADA_LAUNCH.items())
@@ -217,6 +267,12 @@ def main():
     out = out.replace('.jsonl', f'_thrust{THRUST_MS:g}.jsonl')
   if os.environ.get('LAUNCH_SET') == 'canada':
     out = out.replace('.jsonl', '_canada.jsonl')
+  if FUEL_CELL:
+    out = out.replace('.jsonl', f'_fc{FUEL_CELL}.jsonl')
+  if CHARGE_THRUST and not FUEL_CELL:
+    out = out.replace('.jsonl', '_thrustcharged.jsonl')
+  if WINTER:
+    out = out.replace('.jsonl', f'_winter{MAX_DAYS}d.jsonl')
   t = time.time()
   with mp.get_context('spawn').Pool(int(os.environ.get('PROCS', 8))) as pool, open(out, 'w') as f:
     for k, r in enumerate(pool.imap_unordered(fly, jobs)):
