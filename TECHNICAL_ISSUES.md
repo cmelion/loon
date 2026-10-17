@@ -124,7 +124,22 @@ summer launch rate. This drives most of the annual cost.
 2.6 GHz and about 5 m at 800 MHz. A radio of this class plausibly draws
 300–600 W, which a winter night (16 h) cannot supply from a 3 kWh battery.
 
-- **Real-world fix:** a written beam, spectrum and power budget; test hardware.
+Two engine-free checks (2026-10-17) make this the binding constraint:
+
+- **Outage surge scales with capacity** (`outage_scenario.py`,
+  `BALLOON_GBPS=0.04,0.2,0.5`): a 300 km winter voice-and-text zone needs 254
+  balloons and 443 launches a day at 2 Gbps, but **2,545 balloons and 4,429
+  launches a day at 0.2 Gbps** (Loon-class), about 370–740 launch sites at 6–12
+  launches a site a day. Regional backfill only works with gigabit-class radios.
+- **Winter night power on the light vehicle** (`winter_power.py`, 50°N, 60 hPa):
+  a 300 W night load in December needs 4.5 kWh, a 37.5 kg battery at 150 Wh/kg,
+  which leaves −0.5 kg of a 40 kg payload. Summer needs 16.8 kg. A larger array
+  does not help; the 15-hour night does. BLE's own Loon-class tie-back shows the
+  same mechanism: its 3 kWh battery cannot carry November–January nights at 184 W.
+
+- **Real-world fix:** a written beam, spectrum and power budget; test hardware;
+  night duty-cycling of the radio; batteries near 400 Wh/kg (lithium–sulphur
+  class, about 11 kg for the December night).
 - **Fiction lever:** large lightweight conformal arrays on the envelope itself,
   and a power source that is not the lift gas.
 

@@ -252,6 +252,7 @@ def fly(job):
 
 
 def main():
+  import europe_ble as eb
   quick = '--quick' in sys.argv
   months = (11, 12, 1, 2) if WINTER else range(1, 13)
   year = int(os.environ.get('YEAR', eb.T0.year))

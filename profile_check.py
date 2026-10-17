@@ -46,9 +46,15 @@ def main():
   print(f'{"hPa":>6} {"mean u":>8} {"mean v":>8} {"lat of max u":>13} {"max u":>7}')
   for k in np.argsort(-lev):
     j = int(np.nanargmax(zonal[:, k]))
-    print(f'{int(lev[k]):>6} {ubar[k]:>8.1f} {vbar[k]:>8.1f} {lats[j]:>13.1f} {zonal[j, k]:>7.1f}')
+    print(f'{int(lev[k]):>6} {ubar[k]:>8.1f} {vbar[k]:>8.1f} {lats[ia[j]]:>13.1f} {zonal[j, k]:>7.1f}')
   k = int(np.nanargmax(ubar))
   print(f'peak of the box-mean eastward wind: {ubar[k]:.1f} m/s at {int(lev[k])} hPa')
+  trop = np.where((lev >= 100) & (lev <= 500))[0]
+  if len(trop):
+    kt = trop[int(np.nanargmax(ubar[trop]))]
+    jt = int(np.nanargmax(zonal[:, kt]))
+    print(f'tropospheric jet (500-100 hPa): box mean {ubar[kt]:.1f} m/s at {int(lev[kt])} hPa; '
+          f'core {zonal[jt, kt]:.1f} m/s at {lats[ia[jt]]:.1f}N')
 
 
 if __name__ == '__main__':

@@ -62,7 +62,7 @@ def parse_years(s):
   return out
 
 
-def download(year, product, grid, area, out_nc, dt_h):
+def download(year, product, grid, area, out_nc, dt_h, months=range(1, 13)):
   import cdsapi
   levels = PRODUCTS[product]['levels']
   times = [f'{h:02d}:00' for h in range(0, 24, dt_h)]
@@ -71,7 +71,7 @@ def download(year, product, grid, area, out_nc, dt_h):
       'variable': ['u_component_of_wind', 'v_component_of_wind'],
       'pressure_level': [str(p) for p in levels],
       'year': [str(year)],
-      'month': [f'{m:02d}' for m in range(1, 13)],
+      'month': [f'{m:02d}' for m in months],
       'day': [f'{d:02d}' for d in range(1, 32)],
       'time': times,
       'area': list(area),
@@ -85,7 +85,10 @@ def download(year, product, grid, area, out_nc, dt_h):
 
 def convert(nc, product, year, tag, dt_h, ring):
   import xarray as xr
-  ds = xr.open_dataset(nc)
+  # nc is one file or a list of monthly files (CDS caps the size of one request)
+  ds = (xr.open_dataset(nc) if isinstance(nc, str)
+        else xr.concat([xr.open_dataset(f) for f in nc], dim='valid_time'
+                       if 'valid_time' in xr.open_dataset(nc[0]).dims else 'time'))
   # CDS netCDF naming has changed over the years; accept both.
   tname = 'valid_time' if 'valid_time' in ds.dims else 'time'
   lname = 'pressure_level' if 'pressure_level' in ds.dims else 'level'
@@ -136,15 +139,20 @@ def main():
   ring = spec['ring'] and not a.area
   os.makedirs('data', exist_ok=True)
   for year in parse_years(a.years):
-    nc = f'data/era5_{a.product}{"_" + a.tag if a.tag else ""}_{year}.nc'
-    if not a.convert_only:
-      if os.path.exists(nc):
-        print(f'{nc} exists, skipping download', flush=True)
-      else:
-        download(year, a.product, a.grid, area, nc, a.dt_h)
-    convert(nc, a.product, year, a.tag, a.dt_h, ring)
+    stem = f'data/era5_{a.product}{"_" + a.tag if a.tag else ""}_{year}'
+    # One request per month: CDS refuses a year of 15 levels in one go
+    # ("cost limits exceeded"). Each month is skipped if already downloaded.
+    ncs = []
+    for m in range(1, 13):
+      nc = f'{stem}_{m:02d}.nc'
+      ncs.append(nc)
+      if a.convert_only or os.path.exists(nc):
+        continue
+      download(year, a.product, a.grid, area, nc, a.dt_h, months=[m])
+    convert(ncs, a.product, year, a.tag, a.dt_h, ring)
     if not a.keep_nc:
-      os.remove(nc)
+      for nc in ncs:
+        os.remove(nc)
 
 
 if __name__ == '__main__':
